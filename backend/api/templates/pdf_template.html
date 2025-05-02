@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ title }}</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 2cm;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.4;
+        color: #333;
+        font-size: 10px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #2e7d32;
+        padding-bottom: 5px;
+      }
+      .hospital-info {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 9px;
+      }
+      .section {
+        margin-bottom: 14px;
+        page-break-inside: avoid;
+      }
+      .section-title {
+        font-weight: bold;
+        border-bottom: 1px solid #2e7d32;
+        margin-bottom: 6px;
+        color: #2e7d32;
+        font-size: 14px;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+        table-layout: auto;
+        word-wrap: break-word;
+      }
+      .table th {
+        background-color: #2e7d32;
+        color: white;
+        padding: 4px;
+        text-align: left;
+        font-weight: bold;
+        font-size: 15px;
+      }
+      .table td {
+        border: 1px solid #ddd;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+      .info-box {
+        padding: 5px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        min-height: 30px;
+        font-size: 9px;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+      .patient-details {
+        margin-bottom: 15px;
+        font-size: 9px;
+      }
+      .patient-details div {
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
+      .patient-details strong {
+        display: inline-block;
+        width: 80px;
+      }
+      .col-25 {
+        width: 25%;
+      }
+      .col-20 {
+        width: 20%;
+      }
+      .col-33 {
+        width: 33%;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .total-amount {
+        font-weight: bold;
+        font-size: 12px;
+        margin-top: 15px;
+        text-align: right;
+      }
+      .disease-name{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+      .medical-info-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+.medical-info-list li {
+  margin-bottom: 4px;
+  list-style: circle;
+}
+
+.medical-info-list li strong {
+  font-weight: bold;
+  color: #000000;
+  min-width: 130px;
+  display: inline-block;
+}
+
+
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h2 style="color: #2e7d32; margin: 2px 0; font-size: 14px">
+        {{ title }}
+      </h2>
+      <div style="font-size: 11px; color: #2e7d32; display:flex;align-items: center; justify-content: center;">{{ hospital.name }}</div>
+    </div>
+
+    <div class="hospital-info">
+      <p>{{ hospital.address }}, {{ hospital.location }}</p>
+    </div>
+
+    <!-- Patient Details -->
+    <div class="patient-details">
+      <div><strong>Patient Name:</strong> {{ patient.full_name }}</div>
+      <div><strong>Gender:</strong> {{ patient.gender }}</div>
+      <div><strong>Age:</strong> {{ patient.age }}</div>
+      <div><strong>Weight:</strong> {{ patient.weight }} kg</div>
+      <div><strong>Phone:</strong> {{ patient.phone }}</div>
+      <div><strong>Address:</strong> {{ patient.address }}</div>
+    </div>
+
+    <!-- Medical Information -->
+    <div class="section">
+        <div class="section-title">Medical Information</div>
+        <div class="info-box-medical">
+            <ul class="medical-info-list">
+              <p class="disease-name"><strong>Primary Disease:</strong> {{ patient.disease|default:"-" }}</p>
+            <li><strong>Temperature:</strong> {{ patient.temperature|default:"-" }}°C</li>
+            <li><strong>Blood Pressure:</strong> {{ patient.bp|default:"-" }}</li>
+            <li><strong>Weight:</strong> {{ patient.weight|default:"-" }} kg</li>
+            <li><strong>Type:</strong> {{ patient.patient_type|default:"-" }}</li>
+            <li><strong>Bed Assigned:</strong> {{ patient.bed_assign|default:"-" }}</li>
+            <li><strong>Admission Date:</strong> {{ patient.created_at|date:"d/m/Y H:i" }}</li>
+          </ul>
+        </div>
+      </div>
+      
+
+    <!-- Doctor's Advice -->
+    <div class="section">
+      <div class="section-title">Doctor's Advice</div>
+      <div class="info-box" >
+        {{ patient.doctor_advice|default:"No specific advice provided" }}
+      </div>
+    </div>
+
+    <!-- Tests Recommended -->
+    <div class="section">
+      <div class="section-title">Tests Recommended</div>
+      <div class="info-box">
+        {{ patient.selected_test|default:"No tests recommended" }}
+      </div>
+    </div>
+
+    <!-- Medication Details -->
+    {% if patient.injection_required %}
+    <div class="section">
+      <div class="section-title">Injection Details</div>
+      <table class="table">
+        <tr>
+          <th class="col-25">Name</th>
+          <th class="col-25">Dosage</th>
+          <th class="col-25">Size</th>
+        </tr>
+        {% if patient.injection_details %}
+          <tr>
+            <td>{{ patient.injection_details.name }}</td>
+            <td>{{ patient.injection_details.dosage }}</td>
+            <td>{{ patient.injection_details.size }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="3" class="text-center">No injection details provided</td>
+          </tr>
+        {% endif %}
+      </table>
+    </div>
+    {% endif %}
+
+    {% if patient.tablets %}
+    <div class="section">
+      <div class="section-title">Prescribed Tablets</div>
+      <table class="table">
+        <tr>
+          <th class="col-25">Name</th>
+          <th class="col-25">Dosage</th>
+          <th class="col-25">Count</th>
+        </tr>
+      
+          {% for tablet in patient.tablets %}
+            <tr>
+              <td>{{ tablet.name }}</td>
+              <td>{{ tablet.dosage }}</td>
+              <td>{{ tablet.count }}</td>
+            </tr>    
+          {% endfor %}
+        </table>
+    </div>
+    {% else %}
+      <p>No Tablets</p>
+    {% endif %}
+
+    <!-- Payment Information -->
+    <div class="section">
+      <div class="section-title">Payment Information</div>
+      <table class="table">
+        <tr>
+          <th class="col-33">Payment Type</th>
+          <th class="col-33">Amount</th>
+        </tr>
+        <tr>
+          <td>{{ patient.payment_type|default:"-" }}</td>
+          <td>₹ {{ patient.amount|default:"0" }}/-</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Final Total -->
+    <div class="total-amount">
+      Total Amount (Including Tablets, Injections, Tests): ₹ {{ patient.amount|default:"0" }} /-
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: right; margin-top: 10px; font-size: 8px">
+      Report generated on: {{ patient.updated_at|date:"d/m/Y H:i" }} | Status:
+      {{ patient.status }}
+    </div>
+  </body>
+</html>

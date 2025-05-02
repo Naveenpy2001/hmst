@@ -1,0 +1,565 @@
+/* Lab.css */
+
+/* Base Styles */
+.lb-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  /* Notification Styles */
+  .lb-notification {
+    padding: 12px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+  }
+  
+  .lb-notification.error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-left: 4px solid #b91c1c;
+  }
+  
+  .lb-notification.success {
+    background-color: #dcfce7;
+    color: #166534;
+    border-left: 4px solid #166534;
+  }
+  
+  .lb-notification-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: inherit;
+  }
+  
+  /* Navigation Tabs */
+  .lb-navigation {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+  }
+  
+  .lb-tab-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  
+  .lb-tab-button:hover {
+    background: #e2e8f0;
+  }
+  
+  .lb-tab-button.active {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .lb-tab-button.active svg {
+    color: white;
+  }
+  
+  /* Common Form Styles */
+  .lb-title {
+    font-size: 24px;
+    color: #1e293b;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  
+  .lb-section-title {
+    font-size: 18px;
+    color: #1e293b;
+    margin: 20px 0 15px;
+    font-weight: 500;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+  }
+  
+  .lb-form {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .lb-form-group {
+    margin-bottom: 15px;
+  }
+  
+  .lb-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #475569;
+  }
+  
+  .lb-required {
+    color: #ef4444;
+  }
+  
+  .lb-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  
+  .lb-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  .lb-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .lb-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  .lb-input-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .lb-form-row {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .lb-form-row .lb-form-group {
+    flex: 1;
+  }
+  
+  /* Buttons */
+  .lb-fetch-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  
+  .lb-fetch-button:hover {
+    background: #2563eb;
+  }
+  
+  .lb-fetch-button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+  
+  .lb-primary-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  
+  .lb-primary-button:hover {
+    background: #2563eb;
+  }
+  
+  .lb-primary-button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+  
+  .lb-secondary-button {
+    background: #f1f5f9;
+    color: #334155;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  
+  .lb-secondary-button:hover {
+    background: #e2e8f0;
+  }
+  
+  .lb-download-button {
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  
+  .lb-download-button:hover {
+    background: #059669;
+  }
+  
+  .lb-download-button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+  
+  .lb-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+  }
+  
+  /* Patient Details */
+  .lb-patient-details {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+  }
+  
+  .lb-details-title {
+    font-size: 16px;
+    color: #475569;
+    margin-bottom: 15px;
+    font-weight: 500;
+  }
+  
+  .lb-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  
+  .lb-detail-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 5px;
+  }
+  
+  .lb-detail-value {
+    font-weight: 500;
+    color: #1e293b;
+  }
+  
+  /* Status Options */
+  .lb-status-options {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .lb-status-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  
+  .lb-status-radio {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .lb-status-radio:checked {
+    border-color: #3b82f6;
+  }
+  
+  .lb-status-radio:checked::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+  }
+  
+  .lb-status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .lb-status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .lb-status-badge.in-progress {
+    background: #bfdbfe;
+    color: #1e40af;
+  }
+  
+  .lb-status-badge.completed {
+    background: #dcfce7;
+    color: #166534;
+  }
+  
+  /* Search Container */
+  .lb-search-container {
+    margin-bottom: 20px;
+  }
+  
+  .lb-search-group {
+    position: relative;
+    max-width: 400px;
+  }
+  
+  .lb-search-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  
+  .lb-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+  }
+  
+  .lb-clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+  }
+  
+  /* Table Styles */
+  .lb-table-container {
+    overflow-x: auto;
+  }
+  
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .lb-th {
+    background: #f1f5f9;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 500;
+    color: #475569;
+    font-size: 14px;
+  }
+  
+  .lb-td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+  }
+  
+  .lb-tr:hover {
+    background: #f8fafc;
+  }
+  
+  .lb-patient-cell {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lb-patient-id {
+    font-size: 12px;
+    color: #64748b;
+  }
+  
+  .lb-patient-name {
+    font-weight: 500;
+  }
+  
+  /* Empty State */
+  .lb-empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-top: 20px;
+  }
+  
+  /* File Upload */
+  .lb-file-upload {
+    margin-top: 8px;
+  }
+  
+  .lb-file-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .lb-file-input {
+    display: none;
+  }
+  
+  .lb-file-button {
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  
+  .lb-file-button:hover {
+    background: #e2e8f0;
+  }
+  
+  .lb-file-name {
+    color: #64748b;
+    font-size: 14px;
+  }
+  
+  .lb-file-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 5px;
+  }
+  
+  /* Upload Container */
+  .lb-upload-container {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .lb-upload-title {
+    font-size: 24px;
+    color: #1e293b;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  
+  .lb-upload-form {
+    max-width: 600px;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .lb-navigation {
+      flex-direction: column;
+    }
+    
+    .lb-form-row {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .lb-form-actions {
+      flex-direction: column;
+    }
+    
+    .lb-details-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .lb-table {
+      display: block;
+    }
+    
+    .lb-th {
+      display: none;
+    }
+    
+    .lb-tr {
+      display: block;
+      margin-bottom: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+    }
+    
+    .lb-td {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: none;
+    }
+    
+    .lb-td::before {
+      content: attr(data-label);
+      font-weight: 500;
+      color: #475569;
+      margin-right: 15px;
+    }
+    
+    .lb-td:last-child {
+      border-bottom: none;
+    }
+    
+    .lb-status-badge {
+      margin-left: auto;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .lb-container {
+      padding: 15px;
+    }
+    
+    .lb-form, .lb-upload-container {
+      padding: 15px;
+    }
+    
+    .lb-input-group {
+      flex-direction: column;
+    }
+    
+    .lb-fetch-button {
+      width: 100%;
+    }
+  }

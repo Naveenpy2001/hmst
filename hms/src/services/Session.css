@@ -1,0 +1,78 @@
+.session-warning-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 420px;
+  }
+  
+  .session-warning-box {
+    background-color: #fff8db;
+    border-left: 5px solid #f1c40f;
+    color: #8a6d3b;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease-in-out;
+    gap: 10px;
+  }
+  
+  .session-warning-text {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  
+  .session-warning-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .session-warning-button {
+    background-color: #f1c40f;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .session-warning-button:hover {
+    background-color: #d4ac0d;
+  }
+  
+  .session-close-button {
+    background: none;
+    border: none;
+    color: #8a6d3b;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+    transition: color 0.2s ease-in-out;
+  }
+  
+  .session-close-button:hover {
+    color: #5c482a;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -10px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  

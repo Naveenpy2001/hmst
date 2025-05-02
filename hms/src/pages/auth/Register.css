@@ -1,0 +1,460 @@
+/* Base Styles */
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+.rg-container {
+    display: flex;
+    font-family: "Inter", sans-serif;
+    padding: 40px 140px;
+    background-image: radial-gradient( circle farthest-corner at 6.3% 21.8%,  rgba(236,6,117,1) 0%, rgba(13,32,67,1) 90% );
+  }
+  
+  .rg-left-panel {
+    /* flex: 1; */
+    width: 100%;
+    background: #fff;
+
+    color: rgb(0, 0, 0);
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 30px 0 0 30px;
+    border-right: 1px solid #d0d0d0;
+  }
+  .rg-main-c{
+    display: flex;
+    place-items: center;
+    width: 100%;
+  }
+  .rg-welcome-title {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  
+  .rg-welcome-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 500px;
+  }
+  
+  .rg-features {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
+  
+  .rg-feature-item h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  .rg-feature-item p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+  
+  .rg-form-container {
+    width: 100%;
+    max-width: 500px;
+    /* height: 100vh; */
+    overflow-y: auto;
+    padding: 20px 50px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+  }
+  
+  .rg-logo-container {
+    box-sizing: border-box;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(180deg, rgba(248, 248, 248, 0) 50%, #F8F8F888 100%);
+    border: 1px solid #F7F7F8;
+    filter: drop-shadow(0px 0.5px 0.5px #EFEFEF) drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
+    border-radius: 11px;
+    margin: 0 auto 20px;
+  }
+  
+  .rg-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  
+  .rg-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212121;
+  }
+  
+  .rg-subtitle {
+    font-size: 0.9rem;
+    max-width: 90%;
+    text-align: center;
+    line-height: 1.4;
+    color: #8B8E98;
+  }
+  
+  .rg-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    
+  }
+  
+  .rg-input-row {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .rg-input-container {
+    width: 100%;
+    height: fit-content;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 5px;
+  }
+  
+  .rg-icon {
+    width: 20px;
+    position: absolute;
+    z-index: 99;
+    left: 12px;
+    bottom: 10px;
+    color: #3c3c3c;
+  }
+  
+  .rg-input-label {
+    font-size: 0.85rem;
+    color: #5a5a5a;
+    font-weight: 600;
+  }
+  
+  .rg-input-field {
+    width: 100%;
+    height: 45px;
+    padding: 0 0 0 40px;
+    border-radius: 8px;
+    outline: none;
+    border: 1px solid #6f6f6f;
+    filter: drop-shadow(0px 1px 0px #efefef)
+      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
+    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
+    box-sizing: border-box;
+    font-size: 0.95rem;
+  }
+  
+  .rg-input-field:focus {
+    border: 1px solid transparent;
+    box-shadow: 0px 0px 0px 2px #115DFC;
+    background-color: transparent;
+  }
+  
+  .rg-error {
+    color: #ff4444;
+    font-size: 0.75rem;
+    margin-top: 3px;
+  }
+  
+  .rg-sign-up-btn {
+    width: 100%;
+    height: 48px;
+    border: 0;
+    background: #115DFC;
+    border-radius: 8px;
+    outline: none;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  .rg-sign-up-btn:hover {
+    background: #0a4bce;
+  }
+  
+  .rg-sign-up-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .rg-sign-up-ggl, .rg-sign-up-apl {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+  }
+  
+  .rg-sign-up-ggl {
+    background: #ffffff;
+    color: #242424;
+    border: 1px solid #e5e5e5;
+  }
+  
+  .rg-sign-up-ggl:hover {
+    background: #f5f5f5;
+  }
+  
+  .rg-sign-up-apl {
+    background: #212121;
+    color: #ffffff;
+    border: 1px solid #212121;
+  }
+  
+  .rg-sign-up-apl:hover {
+    background: #000000;
+  }
+  
+  .rg-separator {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    color: #8B8E98;
+    font-size: 0.85rem;
+    margin: 15px 0;
+  }
+  
+  .rg-line {
+    display: block;
+    width: 100%;
+    height: 1px;
+    border: 0;
+    background-color: #e8e8e8;
+  }
+  
+  .rg-note {
+    font-size: 0.85rem;
+    color: #8B8E98;
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .rg-note a {
+    color: #115DFC;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .rg-note a:hover {
+    text-decoration: underline;
+  }
+  
+  .rg-error-message {
+    color: #ff4444;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+    padding: 10px;
+    background-color: #ffeeee;
+    border-radius: 5px;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 1024px) {
+    .rg-left-panel {
+      padding: 40px;
+    }
+    
+    .rg-welcome-title {
+      font-size: 1.8rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .rg-container {
+      flex-direction: column-reverse;
+      padding: 10px 20px;
+    }
+    
+    .rg-left-panel {
+      padding: 30px 20px;
+      text-align: center;
+      align-items: center;
+      border-radius: 0;
+      margin: 20px 0;
+    }
+    
+    .rg-form-container {
+      max-width: 100%;
+      height: auto;
+      padding: 40px 30px;
+    }
+    
+    .rg-welcome-title {
+      font-size: 1.6rem;
+    }
+    
+    .rg-welcome-text {
+      margin-bottom: 30px;
+    }
+    
+    .rg-input-row {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .rg-container {
+      display: flex;
+      padding: 10px 10px;
+  }
+    .rg-left-panel {
+      padding: 25px 15px;
+      border-radius: 0;
+    }
+    
+    .rg-form-container {
+      padding: 30px 20px;
+    }
+    
+    .rg-title {
+      font-size: 1.3rem;
+    }
+    
+    .rg-subtitle {
+      font-size: 0.8rem;
+    }
+    
+    .rg-input-field {
+      height: 42px;
+      font-size: 0.9rem;
+    }
+    
+    .rg-sign-up-btn, .rg-sign-up-ggl, .rg-sign-up-apl {
+      height: 45px;
+    }
+    .rg-container {
+        flex-direction: column-reverse;
+    }
+  }
+
+
+  /* OTP Container Styles */
+.rg-otp-container, .lg-otp-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rg-back-button, .lg-back-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #115DFC;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.rg-otp-inputs, .lg-otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.rg-otp-input, .lg-otp-input {
+  width: 45px;
+  height: 60px;
+  text-align: center;
+  font-size: 1.5rem;
+  border: 1px solid #6f6f6f;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.rg-otp-input:focus, .lg-otp-input:focus {
+  border-color: #115DFC;
+  box-shadow: 0 0 0 2px rgba(17, 93, 252, 0.2);
+}
+
+.rg-otp-actions, .lg-otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rg-verify-btn, .lg-verify-btn {
+  width: 100%;
+  height: 48px;
+  border: 0;
+  background: #115DFC;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.rg-verify-btn:hover, .lg-verify-btn:hover {
+  background: #0a4bce;
+}
+
+.rg-resend-btn, .lg-resend-btn {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #115DFC;
+  background: transparent;
+  border-radius: 8px;
+  color: #115DFC;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.rg-resend-btn:hover, .lg-resend-btn:hover {
+  background: rgba(17, 93, 252, 0.1);
+}
+
+.rg-resend-btn:disabled, .lg-resend-btn:disabled {
+  border-color: #cccccc;
+  color: #cccccc;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* Responsive OTP Styles */
+@media (max-width: 480px) {
+  .rg-otp-input, .lg-otp-input {
+    width: 40px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+}
