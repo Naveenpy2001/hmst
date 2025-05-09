@@ -171,14 +171,7 @@
     color: #1e293b;
   }
   
-  /* Medicines Tables */
-  .ph-medicines-container, .ph-given-medicines {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-  }
+
   
   .ph-table-container {
     overflow-x: auto;
@@ -363,3 +356,459 @@
       justify-content: center;
     }
   }
+
+
+
+
+/* Pharmacy.css */
+
+
+
+
+
+.ph-tab-button:hover {
+  color: #2c7be5;
+}
+
+.ph-tab-button.active {
+  color: #ffffff;
+  border-bottom-color: #2c7be5;
+}
+
+.ph-tab-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.ph-error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ph-error-close {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+/* Loading State */
+.ph-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+/* Tab Content */
+.ph-tab-content {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.ph-tab-title {
+  color: #2c7be5;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.ph-section-title {
+  color: #444;
+  margin: 25px 0 15px;
+  font-size: 18px;
+}
+
+/* Record Container */
+
+
+.ph-record-header {
+  margin-bottom: 15px;
+}
+
+.ph-record-header h4 {
+  margin: 0 0 5px 0;
+  color: #444;
+}
+
+.ph-doctor-advice {
+  color: #666;
+  font-style: italic;
+  margin: 5px 0;
+  padding-left: 10px;
+  border-left: 3px solid #2c7be5;
+}
+
+/* Action Buttons */
+.ph-action-buttons {
+  margin-top: 25px;
+  text-align: right;
+}
+
+.ph-primary-button {
+  background-color: #2c7be5;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.ph-primary-button:hover {
+  background-color: #1a68d1;
+}
+
+.ph-primary-button:disabled {
+  background-color: #a0b8d8;
+  cursor: not-allowed;
+}
+
+/* Medicine Tables */
+.ph-medicines-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.ph-medicines-table th {
+  background-color: #f0f4f8;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.ph-medicines-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ph-medicines-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ph-medicine-input {
+  width: 80px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Amount Input */
+.ph-amount-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.ph-amount-input label {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+/* Total Amount Display */
+.ph-total-amount, .ph-record-total, .ph-grand-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background-color: #f0f4f8;
+  border-radius: 4px;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+.ph-grand-total {
+  background-color: #e6f0ff;
+  font-size: 18px;
+  margin-top: 25px;
+}
+
+/* Medicine Sections */
+.ph-medicine-section {
+  margin-bottom: 25px;
+}
+
+.ph-medicine-section h4 {
+  color: #4a5568;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ph-injection-details, .ph-ointment-details, .ph-syrup-details {
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.ph-injection-details p, .ph-ointment-details p, .ph-syrup-details p {
+  margin: 5px 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .ph-container {
+    padding: 10px;
+  }
+  
+  .ph-tab-navigation {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .ph-tab-button {
+    border-bottom: none;
+    border-left: 3px solid transparent;
+    justify-content: flex-start;
+  }
+  
+  .ph-tab-button.active {
+    border-bottom: none;
+    border-left-color: #2c7be5;
+  }
+  
+  .ph-tab-content {
+    padding: 15px;
+  }
+  
+  .ph-medicines-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .ph-action-buttons {
+    text-align: center;
+  }
+  
+  .ph-primary-button {
+    width: 100%;
+    padding: 15px;
+  }
+  
+  .ph-amount-input {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ph-record-container {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ph-tab-button {
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+  
+  .ph-tab-title {
+    font-size: 20px;
+  }
+  
+  .ph-section-title {
+    font-size: 16px;
+  }
+  
+  .ph-medicines-table th, 
+  .ph-medicines-table td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  
+  .ph-medicine-input {
+    width: 70px;
+    padding: 6px 8px;
+  }
+  
+  .ph-record-header h4 {
+    font-size: 16px;
+  }
+  
+  .ph-doctor-advice {
+    font-size: 14px;
+  }
+}
+
+
+
+/* Main Container */
+.ph-given-medicines {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Table Styles */
+.ph-table-container {
+  overflow-x: auto;
+}
+
+.ph-given-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.ph-given-table th {
+  background-color: #f0f0f0;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.ph-given-table td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ph-main-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ph-main-row:hover {
+  background-color: #f5f5f5;
+}
+
+.ph-details-row {
+  background-color: #fafafa;
+}
+
+.ph-record-preview {
+  padding: 15px;
+  background-color: white;
+  border: 1px solid #eee;
+  margin: 5px 0;
+}
+
+/* Details View Styles */
+.ph-details-view {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.ph-back-button {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.ph-record-header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.ph-record-meta {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.ph-medicine-section {
+  margin: 25px 0;
+}
+
+.ph-medicine-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.ph-medicine-table th {
+  background-color: #f8f8f8;
+  padding: 10px;
+  text-align: left;
+}
+
+.ph-medicine-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.ph-total-section {
+  margin-top: 30px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.ph-summary-table {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 10px;
+}
+
+.ph-summary-table td {
+  padding: 8px 0;
+}
+
+.ph-grand-total td {
+  font-weight: bold;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+
+/* Buttons */
+.ph-download-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.ph-view-details-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.ph-expand-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Empty State */
+.ph-empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #777;
+  font-size: 16px;
+}

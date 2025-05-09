@@ -110,6 +110,28 @@ class LabTest(models.Model):
 
 
 
+class Pharmacy(models.Model):
+    patient = models.ForeignKey(PatientRegister, on_delete=models.CASCADE, related_name="pharmacy_records")
+
+    tablets = models.JSONField(default=list, blank=True)  # List of tablets with details
+    tabletsAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    injections = models.JSONField(blank=True, null=True)
+    injectionsAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    ointments = models.JSONField(blank=True, null=True)
+    ointmentsAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    syrups = models.JSONField(blank=True, null=True)
+    syrupsAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    # dispensed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Pharmacy record for patient {self.patient_id} on {self.date.strftime('%Y-%m-%d')}"
+
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -234,21 +256,7 @@ class TicketModel(models.Model):
         return f"Ticket #{self.id} - {self.title}"
 
 
-class LabReport(models.Model):
-    patient = models.ForeignKey(PatientRegister, on_delete=models.CASCADE)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lab_tests')
-    file = models.FileField(upload_to='lab_reports/',null=True,blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    patientName = models.CharField(max_length=225,null=True,blank=True)
-    phone = models.CharField(max_length=225,null=True,blank=True)
-    price = models.CharField(max_length=225,null=True,blank=True)
-    status = models.CharField(max_length=225,null=True,blank=True)
-    testDate = models.CharField(max_length=225,null=True,blank=True)
-    testName = models.CharField(max_length=225,null=True,blank=True)
-    testType = models.CharField(max_length=225,null=True,blank=True)
 
-    def __str__(self):
-        return self.patientName
 
 
 class AvailableTest(models.Model):

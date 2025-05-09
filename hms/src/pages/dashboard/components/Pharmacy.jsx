@@ -1,190 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "./Pharmacy.css";
-import { FiSearch, FiDownload, FiFilter, FiPlus } from "react-icons/fi";
+import { FiPlus, FiFilter } from "react-icons/fi";
 import api from "../../../services/api";
+import PatientSearch from "./PharmacyComponents/PatientSearch";
+import PatientDetails from "./PharmacyComponents/PatientDetails";
+import MedicinesTable from "./PharmacyComponents/MedicinesTable";
+import GivenMedicinesList from "./PharmacyComponents/GivenMedicinesList";
+import FilterControls from "./PharmacyComponents/FilterControls";
 
-// Sub-components
-const PatientSearch = ({ searchId, setSearchId, handleSearch }) => {
-  return (
-    <div className="ph-search-container">
-      <div className="ph-search-group">
-        <FiSearch className="ph-search-icon" />
-        <input
-          type="text"
-          className="ph-search-input"
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          placeholder="Enter Patient ID or Phone"
-        />
-        <button className="ph-search-button" onClick={handleSearch}>
-          Search
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const PatientDetails = ({ patient }) => {
-  if (!patient) return null;
-  
-  return (
-    <div className="ph-patient-details">
-      <h3 className="ph-details-title">Patient Information</h3>
-      <div className="ph-details-grid">
-        <div>
-          <p className="ph-detail-label">Name</p>
-          <p className="ph-detail-value">{patient.name}</p>
-        </div>
-        <div>
-          <p className="ph-detail-label">Phone</p>
-          <p className="ph-detail-value">{patient.phone}</p>
-        </div>
-        <div>
-          <p className="ph-detail-label">Diseases</p>
-          <p className="ph-detail-value">{patient.diseases || "Not specified"}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const MedicinesTable = ({ medicines, showPrices = false, onDownload }) => {
-  const totalAmount = medicines?.reduce(
-    (sum, med) => sum + (med.price || 0) * (med.count || 0),
-    0
-  );
-
-  return (
-    <div className="ph-medicines-container">
-      <div className="ph-table-container">
-        <table className="ph-medicines-table">
-          <thead>
-            <tr>
-              <th>Medicine Name</th>
-              <th>Quantity</th>
-              {showPrices && <th>Price (₹)</th>}
-              {showPrices && <th>Total (₹)</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {medicines?.map((medicine, index) => (
-              <tr key={index}>
-                <td>{medicine.name}</td>
-                <td>{medicine.count || 0}</td>
-                {showPrices && <td>{medicine.price?.toFixed(2) || "0.00"}</td>}
-                {showPrices && (
-                  <td>{((medicine.price || 0) * (medicine.count || 0)).toFixed(2)}</td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showPrices && (
-        <div className="ph-total-amount">
-          <span>Total Amount:</span>
-          <span>₹{totalAmount.toFixed(2)}</span>
-        </div>
-      )}
-
-      {onDownload && (
-        <div className="ph-actions">
-          <button className="ph-download-button" onClick={onDownload}>
-            <FiDownload /> Download Bill
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const GivenMedicinesList = ({ medicines, onDownload }) => {
-  return (
-    <div className="ph-given-medicines">
-      {medicines.length === 0 ? (
-        <div className="ph-empty-state">No medicines given yet</div>
-      ) : (
-        <div className="ph-table-container">
-          <table className="ph-given-table">
-            <thead>
-              <tr>
-                <th>Patient ID</th>
-                <th>Medicines</th>
-                <th>Total Qty</th>
-                <th>Total (₹)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicines.map((given, index) => {
-                const totalQty = given.tablets?.reduce((sum, m) => sum + (m.count || 0), 0) || 0;
-                const totalPrice = given.tablets?.reduce(
-                  (sum, m) => sum + (m.price || 0) * (m.count || 0),
-                  0
-                ) || 0;
-
-                return (
-                  <tr key={index}>
-                    <td>{given.patientId}</td>
-                    <td>
-                      {given.tablets?.map((m) => m.name).join(", ") || "None"}
-                    </td>
-                    <td>{totalQty}</td>
-                    <td>₹{totalPrice.toFixed(2)}</td>
-                    <td>
-                      <button
-                        className="ph-download-button"
-                        onClick={() => onDownload(given.patientId)}
-                      >
-                        <FiDownload />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const FilterControls = ({ filterId, setFilterId, filterDate, setFilterDate, handleFilter }) => {
-  return (
-    <div className="ph-filter-container">
-      <div className="ph-filter-group">
-        <FiFilter className="ph-filter-icon" />
-        <input
-          type="text"
-          className="ph-filter-input"
-          value={filterId}
-          onChange={(e) => setFilterId(e.target.value)}
-          placeholder="Patient ID or Phone"
-        />
-      </div>
-      <div className="ph-filter-group">
-        <input
-          type="date"
-          className="ph-filter-input"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-        />
-      </div>
-      <button className="ph-filter-button" onClick={handleFilter}>
-        Apply Filters
-      </button>
-    </div>
-  );
-};
-
-// Main Component
 const Pharmacy = () => {
   const [searchId, setSearchId] = useState("");
   const [patientDetails, setPatientDetails] = useState(null);
-  const [prescribedMedicines, setPrescribedMedicines] = useState([]);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  
   const [givenMedicines, setGivenMedicines] = useState([]);
   const [activeTab, setActiveTab] = useState(1);
   const [filterId, setFilterId] = useState("");
@@ -192,6 +20,7 @@ const Pharmacy = () => {
   const [filteredGivenMedicines, setFilteredGivenMedicines] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editedRecords, setEditedRecords] = useState([]);
 
   const handleSearch = async () => {
     if (!searchId.trim()) {
@@ -202,61 +31,175 @@ const Pharmacy = () => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await api.get(`/api/patients/${searchId}/`);
+      const response = await api.get(`/api/patients-main/${searchId}/`);
       const data = response.data;
-
+        console.log('patient Data : ',data);
+        
       if (data) {
         setPatientDetails({
           id: data.id,
           name: `${data.first_name} ${data.last_name}`,
           phone: data.phone,
           diseases: data.disease,
+          status:data.status
         });
-        setPrescribedMedicines(Array.isArray(data.tablets) ? data.tablets : []);
+        
+        // Initialize medical records with amounts
+        const recordsWithAmounts = data.medical_records.map(record => ({
+          ...record,
+          tabletsAmount: record.tabletsAmount || 0,
+          injectionsAmount: record.injectionsAmount || 0,
+          ointmentsAmount: record.ointmentsAmount || 0,
+          syrupsAmount: record.syrupsAmount || 0
+        }));
+        
+        setMedicalRecords(recordsWithAmounts);
+        setEditedRecords(recordsWithAmounts);
       } else {
         setError("No patient found with this ID or phone number");
         setPatientDetails(null);
-        setPrescribedMedicines([]);
+        setMedicalRecords([]);
+        setEditedRecords([]);
       }
     } catch (error) {
-      console.error("Error fetching patient data:", error);
-      setError("Failed to fetch patient data. Please try again.");
+      console.error("Error fetching patient data:", error.response.data.detail);
+      setError(error.response.data.detail || "Failed to fetch patient data. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGiveMedicine = () => {
+  const handleGiveMedicine = async () => {
     if (!patientDetails) {
       setError("No patient selected");
       return;
     }
-
-    if (!prescribedMedicines || prescribedMedicines.length === 0) {
-      setError("No medicines prescribed for this patient");
+  
+    if (!editedRecords || editedRecords.length === 0) {
+      setError("No medical records to dispense");
       return;
     }
-
-    const givenData = {
-      patientId: patientDetails.id,
-      patientName: patientDetails.name,
-      date: new Date().toISOString(),
-      tablets: prescribedMedicines.map(med => ({
-        name: med.name,
-        count: med.count || 0,
-        price: med.price || 0
-      }))
-    };
-
-    setGivenMedicines(prev => [...prev, givenData]);
-    setError("");
-    alert("Medicines dispensed successfully!");
-  };
-
-  const fetchPDF = async (patientId) => {
+  
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/api/doctorview/${patientId}/`, {
+      setError("");
+  
+      for (const record of editedRecords) {
+        const payload = {
+          patient_id: patientDetails.id,
+          patient: patientDetails.id,
+          record_id: record.id,
+          doctor_advice: record.doctorAdvice,
+  
+          tablets: record.tablets?.map(tablet => ({
+            name: tablet.name,
+            dosage: tablet.dosage,
+            count: tablet.count,
+            price: tablet.price
+          })) || [],
+  
+          tabletsAmount: record.tabletsAmount || 0,
+  
+          injections: record.injections ? {
+            name: record.injections.name,
+            size: record.injections.size,
+            dosage: record.injections.dosage,
+            price: record.injections.price
+          } : null,
+          injectionsAmount: record.injectionsAmount || 0,
+  
+          ointments: record.ointments ? {
+            name: record.ointments.name,
+            dosage: record.ointments.dosage,
+            price: record.ointments.price
+          } : null,
+          ointmentsAmount: record.ointmentsAmount || 0,
+  
+          syrups: record.syrups ? {
+            name: record.syrups.name,
+            dosage: record.syrups.dosage,
+            price: record.syrups.price
+          } : null,
+          syrupsAmount: record.syrupsAmount || 0,
+  
+          total_amount:
+            (record.tabletsAmount || 0) +
+            (record.injectionsAmount || 0) +
+            (record.ointmentsAmount || 0) +
+            (record.syrupsAmount || 0),
+  
+          date: new Date().toISOString()
+        };
+  
+        console.log("Sending pharmacy record:", payload);
+  
+        const response = await api.post("/api/pharmacy/", payload);
+  
+        if (response.status === 201 || response.status === 200) {
+          console.log("Successfully sent record:", record.id);
+        }
+      }
+  
+      const givenData = {
+        patientId: patientDetails.id,
+        patientName: patientDetails.name,
+        date: new Date().toISOString(),
+        medicalRecords: editedRecords
+      };
+  
+      setGivenMedicines(prev => [...prev, givenData]);
+      setError("");
+      alert("Medicines dispensed successfully!");
+    } catch (error) {
+      console.error("Error dispensing medicines:", error);
+      setError("Failed to dispense medicines. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const fetchDispensedMedicines = async () => {
+    try {
+      const response = await api.get('/api/pharmacy/');
+
+      
+      const transformedData = response.data.map(record => ({
+        patientId: record.patient,
+
+        date: record.date,
+        medicalRecords: [{
+          id: record.id,
+          tablets: record.tablets,
+          injections: record.injections,
+          ointments: record.ointments,
+          syrups: record.syrups,
+          tabletsAmount: parseFloat(record.tabletsAmount),
+          injectionsAmount: parseFloat(record.injectionsAmount),
+          ointmentsAmount: parseFloat(record.ointmentsAmount),
+          syrupsAmount: parseFloat(record.syrupsAmount),
+          total_amount: parseFloat(record.total_amount),
+          doctorAdvice: record.doctor_advice || "No advice recorded"
+        }]
+      }));
+      setGivenMedicines(transformedData);
+    } catch (error) {
+      console.error("Error fetching dispensed medicines:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchDispensedMedicines();
+  },[])
+
+  
+
+  const fetchPDF = async (patientId) => {
+    console.log('pt-id : ',patientId);
+    
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/api/pharmacy/${patientId}/pharmacy-pdf/`, {
         responseType: "blob"
       });
       const blob = new Blob([response.data], { type: "application/pdf" });
@@ -269,6 +212,12 @@ const Pharmacy = () => {
       link.remove();
     } catch (error) {
       console.error("Error fetching PDF:", error);
+      if (error.response && error.response.data instanceof Blob) {
+        const errorText = await error.response.data.text();
+        console.error("Backend error:", errorText); // Shows {"detail": "Not found."}
+      } else {
+        console.error("Error fetching PDF:", error);
+      }
       setError("Failed to download bill. Please try again.");
     } finally {
       setIsLoading(false);
@@ -293,6 +242,10 @@ const Pharmacy = () => {
     if (tabIndex === 2) {
       handleFilter();
     }
+  };
+
+  const handleMedicalRecordsChange = (updatedRecords) => {
+    setEditedRecords(updatedRecords);
   };
 
   return (
@@ -335,19 +288,42 @@ const Pharmacy = () => {
               searchId={searchId}
               setSearchId={setSearchId}
               handleSearch={handleSearch}
+              isLoading={isLoading}
             />
 
             {isLoading && <div className="ph-loading">Loading patient data...</div>}
 
             <PatientDetails patient={patientDetails} />
 
-            {prescribedMedicines.length > 0 && (
+            {medicalRecords.length > 0 && (
               <>
                 <h3 className="ph-section-title">Prescribed Medicines</h3>
-                <MedicinesTable 
-                  medicines={prescribedMedicines} 
-                  onDownload={() => patientDetails && fetchPDF(patientDetails.id)}
-                />
+                {
+                  patientDetails.status === 'completed' ? (
+                    <>
+                    <p style={{fontWeight:'700',color:'green',textAlign:'center',fontSize:'30px'}}>Completed ✅</p>
+                    </>
+                  ) : (
+                    <>
+                    {medicalRecords.map((record, index) => (
+                  <div key={index} className="ph-record-container">
+                 
+                    <MedicinesTable 
+                      medicalRecords={[record]}
+                      showPrices={true}
+                      editable={true}
+                      onDownload={() => patientDetails && fetchPDF(patientDetails.id)}
+                      onMedicalRecordsChange={(updated) => {
+                        const newRecords = [...editedRecords];
+                        newRecords[index] = updated[0];
+                        setEditedRecords(newRecords);
+                      }}
+                    />
+                  </div>
+                ))}
+                    </>
+                  )
+                }
 
                 <div className="ph-action-buttons">
                   <button
@@ -355,7 +331,7 @@ const Pharmacy = () => {
                     onClick={handleGiveMedicine}
                     disabled={isLoading}
                   >
-                    Confirm Dispensing
+                    {isLoading ? "Processing..." : "Confirm Dispensing"}
                   </button>
                 </div>
               </>
@@ -371,10 +347,11 @@ const Pharmacy = () => {
               filterDate={filterDate}
               setFilterDate={setFilterDate}
               handleFilter={handleFilter}
+              isLoading={isLoading}
             />
 
             <GivenMedicinesList
-              medicines={filterId || filterDate ? filteredGivenMedicines : givenMedicines}
+              medicines={givenMedicines}
               onDownload={fetchPDF}
             />
           </div>

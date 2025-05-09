@@ -129,14 +129,14 @@
   </head>
   <body>
     <div class="header">
-      <h2 style="color: #2e7d32; margin: 2px 0; font-size: 14px">
-        {{ title }}
+      <h2 style="color: #2e7d32; margin: 2px 0; font-size: 28px">
+        {{ user.hospital_name }}
       </h2>
-      <div style="font-size: 11px; color: #2e7d32; display:flex;align-items: center; justify-content: center;">{{ hospital.name }}</div>
+      <div style="font-size: 12px; color: #2e7d32;margin:0;">Dr.{{user.username }}</div>
     </div>
 
     <div class="hospital-info">
-      <p>{{ hospital.address }}, {{ hospital.location }}</p>
+      <p>{{ user.address }}, {{ hospital.location }}</p>
     </div>
 
     <!-- Patient Details -->
@@ -155,10 +155,10 @@
         <div class="info-box-medical">
             <ul class="medical-info-list">
               <p class="disease-name"><strong>Primary Disease:</strong> {{ patient.disease|default:"-" }}</p>
-            <li><strong>Temperature:</strong> {{ patient.temperature|default:"-" }}°C</li>
+            <li><strong>Temperature:</strong> {{ patient.temparature|default:"-" }}°C</li>
             <li><strong>Blood Pressure:</strong> {{ patient.bp|default:"-" }}</li>
-            <li><strong>Weight:</strong> {{ patient.weight|default:"-" }} kg</li>
-            <li><strong>Type:</strong> {{ patient.patient_type|default:"-" }}</li>
+            <li><strong>Weight:</strong> {{ patient.weight|default:"N/A" }} kg</li>
+            <li><strong>Type:</strong> {{ patient.patientType|default:"-" }}</li>
             <li><strong>Bed Assigned:</strong> {{ patient.bed_assign|default:"-" }}</li>
             <li><strong>Admission Date:</strong> {{ patient.created_at|date:"d/m/Y H:i" }}</li>
           </ul>
@@ -169,16 +169,23 @@
     <!-- Doctor's Advice -->
     <div class="section">
       <div class="section-title">Doctor's Advice</div>
-      <div class="info-box" >
-        {{ patient.doctor_advice|default:"No specific advice provided" }}
+      {% if medical_records %}
+      <div class="info-box">
+        {{ medical_records.0.doctorAdvice|default:"No specific advice provided" }}
       </div>
+        {% else %}
+      <div class="info-box">
+        No medical records found.
+      </div>
+{% endif %}
+
     </div>
 
     <!-- Tests Recommended -->
     <div class="section">
       <div class="section-title">Tests Recommended</div>
       <div class="info-box">
-        {{ patient.selected_test|default:"No tests recommended" }}
+        {{ medical_records.test|default:"No tests recommended" }}
       </div>
     </div>
 
@@ -207,17 +214,17 @@
     </div>
     {% endif %}
 
-    {% if patient.tablets %}
-    <div class="section">
-      <div class="section-title">Prescribed Tablets</div>
-      <table class="table">
-        <tr>
-          <th class="col-25">Name</th>
-          <th class="col-25">Dosage</th>
-          <th class="col-25">Count</th>
-        </tr>
-      
-          {% for tablet in patient.tablets %}
+    {% for record in medical_records %}
+    {% if record.tablets %}
+      <div class="section">
+        <div class="section-title">Prescribed Tablets (Date: {{ record.date|date:"d M Y" }})</div>
+        <table class="table">
+          <tr>
+            <th class="col-25">Name</th>
+            <th class="col-25">Dosage</th>
+            <th class="col-25">Count</th>
+          </tr>
+          {% for tablet in record.tablets %}
             <tr>
               <td>{{ tablet.name }}</td>
               <td>{{ tablet.dosage }}</td>
@@ -225,10 +232,12 @@
             </tr>    
           {% endfor %}
         </table>
-    </div>
+      </div>
     {% else %}
-      <p>No Tablets</p>
+      <p>No Tablets in record dated {{ record.date|date:"d M Y" }}</p>
     {% endif %}
+  {% endfor %}
+  
 
     <!-- Payment Information -->
     <div class="section">
@@ -239,7 +248,7 @@
           <th class="col-33">Amount</th>
         </tr>
         <tr>
-          <td>{{ patient.payment_type|default:"-" }}</td>
+          <td>{{ patient.paymentType|default:"-" }}</td>
           <td>₹ {{ patient.amount|default:"0" }}/-</td>
         </tr>
       </table>
@@ -252,8 +261,13 @@
 
     <!-- Footer -->
     <div style="text-align: right; margin-top: 10px; font-size: 8px">
-      Report generated on: {{ patient.updated_at|date:"d/m/Y H:i" }} | Status:
-      {{ patient.status }}
+      {% if medical_records %}
+  Report generated on: {{ medical_records.0.date|date:"d/m/Y H:i" }} |
+  Status: {{ patient.status }}
+{% else %}
+  <p>No medical records available.</p>
+{% endif %}
+
     </div>
   </body>
 </html>

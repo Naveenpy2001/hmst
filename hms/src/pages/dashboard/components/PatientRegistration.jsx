@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import "./patient.css";
+import "./Patient.css";
 import api from "../../../services/api";
 
 const PatientRegistration = () => {

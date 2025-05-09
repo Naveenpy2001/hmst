@@ -113,16 +113,23 @@ class LabTestSerializer(serializers.ModelSerializer):
         model = LabTest
         fields = '__all__'
 
+
+class PharmacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pharmacy
+        fields = '__all__'
+
 class PatientDetailSerializer(serializers.ModelSerializer):
     medical_records = MedicalRecordSerializer(many=True, read_only=True)
     lab_tests = LabTestSerializer(many=True, read_only=True)
+    pharmacy_records = PharmacySerializer(many=True,read_only=True)
 
     class Meta:
         model = PatientRegister
         fields = [
-            'id', 'first_name', 'last_name', 'age', 'phone', 'disease',
+            'id', 'first_name', 'last_name', 'age','amount', 'phone', 'disease',
             'gender', 'address', 'temparature', 'bp', 'appointment',
-            'patientType', 'paymentType', 'medical_records','lab_tests','status'
+            'patientType', 'paymentType', 'medical_records','lab_tests','pharmacy_records','status'
         ]
 
 
@@ -202,16 +209,8 @@ class SyrupSerializer(serializers.ModelSerializer):
         model = Syrup
         fields = '__all__'
 
-class LabTestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LabTest
-        fields = '__all__'
 
 
-class LabTestTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LabReport
-        fields = '__all__'
 
 
 
@@ -239,13 +238,3 @@ class DoctorPaymentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['doctor', 'amount', 'patients_count', 'month', 'year']
 
-
-class LabTestSerializerMain(serializers.ModelSerializer):
-    created_by = serializers.StringRelatedField(read_only=True)  # Show username/email of the creator
-    patient = serializers.StringRelatedField(read_only=True)
-    class Meta:
-        model = LabReport
-        fields = '__all__'
-        extra_kwargs = {
-            'file': {'required': False},
-        }

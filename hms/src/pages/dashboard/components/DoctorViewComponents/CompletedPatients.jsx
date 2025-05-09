@@ -11,7 +11,7 @@ const CompletedPatients = ({ selectedPatient, onSelectPatient }) => {
   // Fetch completed patients (you can call this in useEffect)
   const fetchCompletedPatients = async () => {
     try {
-      const response = await api.get('/api/patients/completed/');
+      const response = await api.get('/api/patients-main/completed/');
       console.log('completed : ',response.data);
       
       setCompletedPatients(response.data);
@@ -91,7 +91,11 @@ fetchCompletedPatients()
                     <td>{patient.age}</td>
                     <td>{patient.disease}</td>
                     <td>
-                      <span className={`cp-status cp-status-${patient.status}`}>
+                    <span
+                        className={`status-badge ${patient.status
+                          .toLowerCase()
+                          .replace(" ", "-")}`}
+                      >
                         {patient.status}
                       </span>
                     </td>
@@ -139,6 +143,7 @@ fetchCompletedPatients()
         </>
       ) : (
         <div className="cp-patient-details">
+          <hr />
           <h2 className="cp-details-title">Patient Details</h2>
           
           <div className="cp-details-grid">
@@ -162,49 +167,85 @@ fetchCompletedPatients()
             
             <div className="cp-detail-item">
               <span className="cp-detail-label">Status:</span>
-              <span className={`cp-status cp-status-${selectedPatient.status}`}>
+              <span className={`cp-status cp-status-${selectedPatient.status.toLowerCase().replace(" ", "-")}`}>
                 {selectedPatient.status}
               </span>
             </div>
           </div>
-
+        <hr />
           <div className="cp-prescription-section">
             <h3 className="cp-section-title">Prescription Details</h3>
             
-            {selectedPatient.tablets && selectedPatient.tablets.length > 0 && (
+            {selectedPatient.medical_records[0].tablets && selectedPatient.medical_records[0].tablets.length > 0 && (
+              <>
               <div className="cp-medication-group">
                 <h4>Tablets</h4>
                 <ul className="cp-medication-list">
-                  {selectedPatient.tablets.map((tablet, index) => (
+                  {selectedPatient.medical_records[0].tablets.map((tablet, index) => (
                     <li key={index} className="cp-medication-item">
-                      {tablet.name} - {tablet.count} tablets ({tablet.dosage})
+                      {tablet.name} | {tablet.count} tablets ({tablet.dosage}) | {tablet.frequency} | {tablet.duration} Days
                     </li>
                   ))}
                 </ul>
               </div>
+              <hr />
+              </>
             )}
 
-            {selectedPatient.injection_details && (
+            {selectedPatient.medical_records[0].injections && (
+              <>
               <div className="cp-medication-group">
                 <h4>Injection</h4>
                 <p className="cp-medication-item">
-                  {selectedPatient.injection_details.name} ({selectedPatient.injection_details.size}) - {selectedPatient.injection_details.dosage}
+                  {selectedPatient.medical_records[0].injections.name} - {selectedPatient.medical_records[0].injections.size} - {selectedPatient.medical_records[0].injections.dosage}
                 </p>
               </div>
+              <hr />
+              </>
             )}
 
-            {selectedPatient.test && (
+        {selectedPatient.medical_records[0].ointments && (
+              <>
+              <div className="cp-medication-group">
+                <h4>Ointment</h4>
+                <p className="cp-medication-item">
+                  {selectedPatient.medical_records[0].ointments.name} - {selectedPatient.medical_records[0].ointments.dosage}
+                </p>
+              </div>
+              <hr />
+              </>
+            )}
+    
+        {selectedPatient.medical_records[0].syrups && (
+              <>
+              <div className="cp-medication-group">
+                <h4>Syrup(Tonic)</h4>
+                <p className="cp-medication-item">
+                  {selectedPatient.medical_records[0].syrups.name} - {selectedPatient.medical_records[0].syrups.dosage}
+                </p>
+              </div>
+              <hr />
+              </>
+            )}
+
+            {selectedPatient.medical_records[0].tests && (
+              <>
               <div className="cp-medication-group">
                 <h4>Lab Test</h4>
-                <p className="cp-medication-item">{selectedPatient.test}</p>
+                <p className="cp-medication-item">{selectedPatient.medical_records[0].tests}</p>
               </div>
+              <hr />
+              </>
             )}
 
-            {selectedPatient.doctor_advice && (
+            {selectedPatient.medical_records[0].doctorAdvice && (
+              <>
               <div className="cp-advice-section">
                 <h4>Doctor's Advice</h4>
-                <p className="cp-advice-text">{selectedPatient.doctor_advice}</p>
+                <p className="cp-advice-text">{selectedPatient.medical_records[0].doctorAdvice}</p>
               </div>
+              <hr />
+              </>
             )}
           </div>
 

@@ -17,8 +17,18 @@ import {
 } from "react-icons/fa";
 import "./DashboardContent.css";
 import api from "../../../services/api";
+import useBillingStore from "../../../store/billingStore";
+import usePatientStore from "../../../store/patientsStore";
 
 const DashboardContent = () => {
+  const { patients, fetchPatients, totals } = usePatientStore();
+  console.log('patients : ',patients);
+  console.log('totals : ',totals);
+  
+  useEffect(() => {
+    fetchPatients();
+  }, [])
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true); // New: loading state
   const [error, setError] = useState(null); // New: error state
@@ -38,11 +48,15 @@ const DashboardContent = () => {
     { name: "Dec", patients: 0 },
   ]);
   
+  const { todaysPayments, monthlyPayments } = useBillingStore();
+
+  const totalToday = todaysPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+  const totalMonthly = monthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
   const fetchData = async () => {
     try {
       const res = await api.get("/api/patients/patients_stats/");
-      console.log(res.data);
+      // console.log(res.data);
       setData(res.data || []);
       setRecentPatients(res.data.today_patients_data || []);
       const currentMonthIndex = new Date().getMonth(); 
@@ -76,13 +90,13 @@ const DashboardContent = () => {
     },
     {
       title: "Today's Payments",
-      value: "₹0",
+      value: totals.totalConsultation.toFixed(2),
       icon: <FaMoneyBillWave />,
       color: "#36b9cc",
     },
     {
       title: "Total Payments",
-      value: "₹0",
+      value: totals.grandTotal.toFixed(2),
       icon: <FaCalendarAlt />,
       color: "#f6c23e",
     },

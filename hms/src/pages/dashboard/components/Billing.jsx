@@ -4,12 +4,21 @@ import { FiDollarSign, FiCalendar, FiCreditCard, FiPieChart, FiDownload } from '
 // import { API_URL } from '../../API';
 import './Billing.css';
 import api from '../../../services/api';
+import useBillingStore from '../../../store/billingStore';
 
 const Billing = () => {
-  const [todaysPayments, setTodaysPayments] = useState([]);
-  const [monthlyPayments, setMonthlyPayments] = useState([]);
-  const [yearlyPayments, setYearlyPayments] = useState([]);
-  const [totalPatients, setTotalPatients] = useState(0);
+
+  const {
+    todaysPayments,
+    monthlyPayments,
+    yearlyPayments,
+    totalPatients,
+    setTodaysPayments,
+    setMonthlyPayments,
+    setYearlyPayments,
+    setTotalPatients
+  } = useBillingStore();
+
   const [currentTab, setCurrentTab] = useState('todaysPayments');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -102,7 +111,6 @@ const Billing = () => {
   };
 
   const calculateTotal = (payments) => {
-    console.log('calculateTotal input:', payments);
     if (!Array.isArray(payments)) return 0;
     return payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
   };
@@ -203,7 +211,7 @@ const Billing = () => {
                         <td>{payment.first_name} {payment.last_name}</td>
                         <td>{payment.phone}</td>
                         <td>{payment.amount}</td>
-                        <td>{payment.payment_method || 'Cash'}</td>
+                        <td>{payment.paymentType || 'Cash'}</td>
                       </tr>
                     ))}
                   </tbody>

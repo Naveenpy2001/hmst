@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaEnvelope, FaLock,FaArrowLeft } from 'react-icons/fa';
-import { FcGoogle } from 'react-icons/fc';
-import { AiFillApple } from 'react-icons/ai';
 import './Login.css'
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -138,6 +136,7 @@ const LoginForm = () => {
         email: unverifiedEmail,
         otp: otpCode
       });
+      alert('email has been verified. Please login')
       navigate('/dashboard');
     } catch (error) {
       setVerificationError(error.response?.data?.message || 'Verification failed. Please try again.');

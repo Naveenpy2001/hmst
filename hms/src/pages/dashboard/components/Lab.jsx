@@ -72,7 +72,7 @@ const Lab = () => {
   const fetchAvailableTests = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/getAvailableTests`);
+      const response = await axios.get(`/getAvailableTests`);
       setAvailableTests(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching available tests:", error);
@@ -86,7 +86,9 @@ const Lab = () => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await api.get(`/api/patients/${id}/`);
+      const response = await api.get(`/api/patients-main/${id}/`);
+      console.log('lab res :',response.data);
+      
       if (response.data) {
         setPatientDetails(response.data);
         setSuccess("Patient data fetched successfully");
@@ -145,22 +147,24 @@ const Lab = () => {
       setError("Please fill all required fields");
       return;
     }
-    const payload = {
-      ...newTest,
-      patientId: patientDetails.id,
-      patientName: `${patientDetails.first_name} ${patientDetails.last_name}`,
-      phone: patientDetails.phone
-    };
+
+
+    const formData = new FormData();
+    formData.append('testName', newTest.testName);
+    formData.append('testDate', newTest.testDate);
+    formData.append('status', newTest.status);
+    formData.append('price', newTest.price);
+    formData.append('notes', newTest.notes);
+    formData.append('testType', newTest.testType);
+    formData.append('patient', patientDetails.id);
+    formData.append('patient_id', patientDetails.id);
+    formData.append('phone', patientDetails.phone);
   
-    console.log("Submitting new test:", payload);  
+    console.log("Submitting new test:", formData);  
 
     try {
       setIsLoading(true);
-      await api.post(`/api/lab-tests/`, { payload }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      await api.post(`/api/lab-tests/`, formData);
       setSuccess("Lab test added successfully!");
       setNewTest({
         testName: "",
@@ -187,6 +191,11 @@ const Lab = () => {
     }
     await fetchPatientData(patientId);
   };
+
+  const fetchComepletedLab = async () => {
+    const res = await api.get();
+    
+  }
 
   const handleDownloadPDF = async (patientId = patientDetails?.id) => {
     if (!patientId) {
@@ -227,7 +236,7 @@ const Lab = () => {
       setIsLoading(true);
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('patientId', patientDetails.id);
+      formData.append('patient_id', patientDetails.id);
       formData.append('patientName', `${patientDetails.first_name} ${patientDetails.last_name}`);
 
       await api.post(`/api/lab-tests/`, formData, {
@@ -323,7 +332,7 @@ const Lab = () => {
                 </div>
                 <div>
                   <p className="lb-detail-label">Test Required</p>
-                  <p className="lb-detail-value">{patientDetails.selectedTest || "Not specified"}</p>
+                  <p className="lb-detail-value"> {patientDetails.medical_records[0].tests || "Not specified"}</p>
                 </div>
               </div>
             </div>
@@ -391,7 +400,7 @@ const Lab = () => {
           <div className="lb-form-group">
             <label className="lb-label">Status</label>
             <div className="lb-status-options">
-              {["pending", "in-progress", "completed"].map(status => (
+              {["pending", "completed"].map(status => (
                 <label key={status} className="lb-status-label">
                   <input
                     type="radio"

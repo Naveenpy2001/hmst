@@ -21,6 +21,8 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from .models import *
 from .serializers import *
+import io
+
 
 
 
@@ -238,16 +240,6 @@ class PatientViewSet(viewsets.ModelViewSet):
         pending = self.get_queryset().filter(status='Pending')
         serializer = self.get_serializer(pending, many=True)
         return Response(serializer.data)
-
-    @action(detail=False, methods=['get'], url_path='completed')
-    def completed_patients(self, request):
-    #     completed = self.get_queryset().filter(
-    #     Q(status='Completed') | Q(status='In Progress')
-    # )
-        completed = self.get_queryset().filter(status='Completed')
-        serializer = self.get_serializer(completed, many=True)
-        return Response(serializer.data)
-    
    
 
     @action(detail=False, methods=['get'], url_path='patients_stats')
@@ -337,7 +329,7 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
         medical_record = serializer.save()
 
         patient = medical_record.patient
-        patient.status = 'Completed'
+        patient.status = 'In Progress'
         patient.save()
 
 
@@ -349,11 +341,115 @@ class LabTestViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return LabReport.objects.filter(created_by=self.request.user)
+        return LabTest.objects.filter(patient__user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        patient_id = self.request.data.get('patient_id')
+        if not patient_id:
+            raise serializers.ValidationError({"patient_id": "This field is required."})
+        
+        try:
+            patient = PatientRegister.objects.get(id=patient_id, user=self.request.user)
+        except PatientRegister.DoesNotExist:
+            raise serializers.ValidationError({"patient_id": "Invalid or unauthorized patient."})
 
+        serializer.save(patient=patient)
+
+
+
+class PharmacyViewSet(viewsets.ModelViewSet):
+    serializer_class = PharmacySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Pharmacy.objects.filter(patient__user=self.request.user).order_by('-date')
+
+    def perform_create(self, serializer):
+        patient_id = self.request.data.get('patient_id')
+        if not patient_id:
+            raise serializers.ValidationError({"patient_id": "This field is required."})
+        
+        try:
+            patient = PatientRegister.objects.get(id=patient_id, user=self.request.user)
+        except PatientRegister.DoesNotExist:
+            raise serializers.ValidationError({"patient_id": "Invalid or unauthorized patient."})
+        
+        # Save the pharmacy record
+        serializer.save(patient=patient)
+
+        # Update patient status to 'completed'
+        patient.status = "Completed"
+        patient.save()
+
+    @action(detail=True, methods=['get'], url_path='pharmacy-pdf')
+    def generate_pdf(self, request, pk=None):
+        pharmacy = self.get_object()
+        template_path = 'pharmacy.html'
+
+        context = {
+            'pharmacy': pharmacy,
+            'user': request.user
+        }
+
+        html = render_to_string(template_path, context)
+        result = io.BytesIO()
+        pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), dest=result)
+
+        if not pdf.err:
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename=pharmacy_record_{pharmacy.id}.pdf'
+            return response
+        return Response({'error': 'Failed to generate PDF'}, status=500)
+
+
+# The action in your view to generate the PDF ----- main view for see full details of a single user
+class PatientViewSetMain(viewsets.ModelViewSet):
+    serializer_class = PatientDetailSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['first_name', 'last_name', 'phone', 'disease']
+
+    def get_queryset(self):
+        return PatientRegister.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='completed')
+    def completed_patients(self, request):
+        completed = self.get_queryset().filter(
+            Q(status='Completed') | Q(status='In Progress')
+             )
+        serializer = self.get_serializer(completed, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def generate_pdf(self, request, pk=None):
+        patient = get_object_or_404(PatientRegister, pk=pk, user=request.user)
+        medical_records = MedicalRecord.objects.filter(patient=patient)
+
+        # Render the template with patient details
+        template = get_template('pdf_template.html')
+        context = {
+            'patient': patient,
+            'medical_records': medical_records,
+            'user': request.user
+        }
+        html_content = template.render(context)
+
+        # Generate PDF using xhtml2pdf
+        pdf_output = BytesIO()
+        pisa_status = pisa.CreatePDF(html_content, dest=pdf_output)
+
+        # Check if the PDF generation was successful
+        if pisa_status.err:
+            return HttpResponse("Error generating PDF", status=400)
+
+        # Return the PDF as a response
+        pdf_output.seek(0)
+        response = HttpResponse(pdf_output, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="patient_{patient.id}_report.pdf"'
+        return response
 
 
 class TicketAPIView(APIView):
@@ -458,8 +554,6 @@ class DoctorMonthlyStatsView(APIView):
 
 
 
-
-
 class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
     queryset = MonthlyDoctorPayment.objects.all()
     serializer_class = MonthlyPaymentUpdateSerializer
@@ -498,54 +592,6 @@ class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
 
 
 
-
-# The action in your view to generate the PDF
-class PatientViewSetMain(viewsets.ModelViewSet):
-    serializer_class = PatientDetailSerializer
-    permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['first_name', 'last_name', 'phone', 'disease']
-
-    def get_queryset(self):
-        return PatientRegister.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    @action(detail=False, methods=['get'], url_path='completed')
-    def completed_patients(self, request):
-        completed = self.get_queryset().filter(status='Completed')
-        serializer = self.get_serializer(completed, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def generate_pdf(self, request, pk=None):
-        patient = get_object_or_404(PatientRegister, pk=pk, user=request.user)
-        medical_records = MedicalRecord.objects.filter(patient=patient)
-
-        # Render the template with patient details
-        template = get_template('pdf_template.html')
-        context = {
-            'patient': patient,
-            'medical_records': medical_records
-        }
-        html_content = template.render(context)
-
-        # Generate PDF using xhtml2pdf
-        pdf_output = BytesIO()
-        pisa_status = pisa.CreatePDF(html_content, dest=pdf_output)
-
-        # Check if the PDF generation was successful
-        if pisa_status.err:
-            return HttpResponse("Error generating PDF", status=400)
-
-        # Return the PDF as a response
-        pdf_output.seek(0)
-        response = HttpResponse(pdf_output, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="patient_{patient.id}_report.pdf"'
-        return response
-
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -576,13 +622,7 @@ class DoctorPaymentStatusView(APIView):
         return Response(data)
 
 
-class LabTestTypeViewSet(viewsets.ModelViewSet):
-    queryset = LabReport.objects.all()
-    serializer_class = LabTestTypeSerializer
-    permission_classes = [IsAuthenticated] 
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
 
 
 import csv

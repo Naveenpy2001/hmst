@@ -54,7 +54,7 @@ function Dashboard() {
       const savedTab = localStorage.getItem('activeTab');
       if (savedTab) setActiveTab(savedTab);
     } catch (error) {
-      console.log("Error fetching data: ", error);
+      console.error("Error fetching data: ", error);
       navigate("/login");
     }
   };

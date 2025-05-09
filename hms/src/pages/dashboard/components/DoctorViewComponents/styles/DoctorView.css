@@ -82,7 +82,7 @@
     --dark-color: #2c3e50;
     --gray-color: #95a5a6;
     --white-color: #ffffff;
-    --border-radius: 8px;
+    --border-radius: 4px;
     --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
   }
@@ -175,7 +175,7 @@
   .form-group textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid #8c8c8c;
     border-radius: var(--border-radius);
     font-size: 1rem;
     transition: var(--transition);
@@ -362,7 +362,7 @@
   .search-input {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid #919191;
     border-radius: var(--border-radius);
     font-size: 1rem;
     transition: var(--transition);

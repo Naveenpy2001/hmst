@@ -18,7 +18,7 @@ const PatientTracking = () => {
       try {
         setLoading(true);
         const response = await api.get(
-          `api/patients/?search=${searchTerm}&date=${filterDate}`
+          `api/patients-main/?search=${searchTerm}`
         );
         console.log(response.data);
         
@@ -104,6 +104,7 @@ const PatientTracking = () => {
                 <span className="pt-detail-value">{selectedPatient.address}</span>
               </div>
             </div>
+            <hr />
           </div>
         </div>
       ) : (
@@ -128,23 +129,7 @@ const PatientTracking = () => {
               )}
             </div>
 
-            <div className="pt-date-filter">
-              <FiCalendar className="pt-date-icon" />
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value)}
-                className="pt-date-input"
-              />
-              {filterDate && (
-                <button 
-                  onClick={() => setFilterDate("")} 
-                  className="pt-clear-date"
-                >
-                  <FiX />
-                </button>
-              )}
-            </div>
+           
 
             {(searchTerm || filterDate) && (
               <button 

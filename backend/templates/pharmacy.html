@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacy Record - {{ pharmacy.id }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            padding: 0;
+            margin: 0;
+            background-color: white;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .patient-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .patient-info div {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .patient-info strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .section {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            color: #3498db;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #3498db;
+        }
+        
+        .advice-box {
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 11px;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 6px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .total-row {
+            font-weight: 600;
+            background-color: #f8f8f8;
+        }
+        
+        .total-amount {
+            text-align: right;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .footer {
+            margin-top: 15px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .signature {
+            margin-top: 20px;
+            text-align: right;
+        }
+        
+        .signature-line {
+            width: 150px;
+            border-top: 1px solid #333;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PHARMACY PRESCRIPTION</h1>
+        </div>
+        
+        <div class="patient-info">
+            <div>
+                <strong>PATIENT NAME</strong>
+                {{ pharmacy.patient.name }}
+            </div>
+            <div>
+                <strong>PATIENT ID</strong>
+                {{ pharmacy.patient.id }}
+            </div>
+            <div>
+                <strong>DATE</strong>
+                {{ pharmacy.date|date:"Y-m-d H:i" }}
+            </div>
+            <div>
+                <strong>DISPENSED BY</strong>
+                {{ pharmacy.dispensed_by.email }}
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">DOCTOR'S ADVICE</h2>
+            <div class="advice-box">
+                {{ pharmacy.doctor_advice|default:"No specific advice provided" }}
+            </div>
+        </div>
+        
+        {% if pharmacy.tablets %}
+        <div class="section">
+            <h2 class="section-title">TABLETS</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Dosage</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tab in pharmacy.tablets %}
+                    <tr>
+                        <td>{{ tab.name }}</td>
+                        <td>{{ tab.dosage }}</td>
+                        <td>{{ tab.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="total-amount">Tablets Total: ₹{{ pharmacy.tabletsAmount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+        
+        {% if pharmacy.injections %}
+        <div class="section">
+            <h2 class="section-title">INJECTIONS</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Size</th>
+                        <th>Dosage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ pharmacy.injections.name }}</td>
+                        <td>{{ pharmacy.injections.size }}</td>
+                        <td>{{ pharmacy.injections.dosage }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="total-amount">Injections Total: ₹{{ pharmacy.injectionsAmount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+        
+        {% if pharmacy.syrups %}
+        <div class="section">
+            <h2 class="section-title">SYRUPS</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Dosage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ pharmacy.syrups.name }}</td>
+                        <td>{{ pharmacy.syrups.dosage }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="total-amount">Syrups Total: ₹{{ pharmacy.syrupsAmount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+        
+        {% if pharmacy.ointments %}
+        <div class="section">
+            <h2 class="section-title">OINTMENTS</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Dosage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ pharmacy.ointments.name }}</td>
+                        <td>{{ pharmacy.ointments.dosage }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="total-amount">Ointments Total: ₹{{ pharmacy.ointmentsAmount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="total-amount" style="font-size: 16px; margin-top: 20px;">
+            GRAND TOTAL: ₹{{ pharmacy.total_amount|floatformat:2 }}
+        </div>
+        
+        <div class="signature">
+            <div class="signature-line"></div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an electronically generated document</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -7,9 +7,11 @@ router = DefaultRouter()
 router.register(r'user-details', UserViewSet, basename='user-details')
 router.register(r'patients', PatientViewSet, basename='patients')
 router.register(r'records', MedicalRecordViewSet, basename='medical-records')
-router.register(r'lab', LabTestTypeViewSet, basename='lab-records')
 router.register(r'lab-tests', LabTestViewSet, basename='lab-test')
+router.register(r'pharmacy', PharmacyViewSet, basename='pharmacy')
+
 router.register(r'patients-main', PatientViewSetMain, basename='patient-main')
+
 router.register(r'monthly-payment', AdminMonthlyPaymentViewSet, basename='admin-monthly-payment')   #admin
 router.register(r'upload', FileUploadViewSet, basename='file-upload')
 

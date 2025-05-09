@@ -50,6 +50,7 @@ const DoctorView = () => {
           <PatientTreatmentForm 
             patientId={patientId} 
             onCancel={() => setActiveTab(1)}
+            onSuccess={() => setActiveTab(3)}
           />
         )}
         
