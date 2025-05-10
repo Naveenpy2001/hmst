@@ -35,7 +35,7 @@ fetchCompletedPatients()
 
   const downloadPdf = async (patientId) => {
     try {
-      const response = await api.get(`http://127.0.0.1:8000/api/patients-main/${patientId}/generate_pdf/`, {
+      const response = await api.get(`/api/patients-main/${patientId}/generate_pdf/`, {
         responseType: 'blob',
       });
 

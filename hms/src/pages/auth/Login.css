@@ -372,5 +372,6 @@
     }
     .lg-container {
         flex-direction: column-reverse;
+        padding: 30px 20px;
     }
   }

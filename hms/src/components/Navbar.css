@@ -337,4 +337,37 @@
     .in-logo-icon {
       font-size: 1.5rem;
     }
+    .lg-container{
+    display: flex;
+    min-height: 90vh;
+    font-family: "Inter", sans-serif;
+    padding: 40px 20px;
+    background-image: radial-gradient(circle farthest-corner at 6.3% 21.8%, rgba(236, 6, 117, 1) 0%, rgba(13, 32, 67, 1) 90%);
+}
+.imgLogoHms {
+    transform: translateY(4px);
+    width: 20%;
+}
+.in-logo-text {
+    display: flex;
+    align-items: baseline;
+    font-size: 12px;
+}
+.highlite {
+    font-size: 10px;
+}
+.in-navbar-logo a {
+    display: flex
+;
+    align-items: center;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    gap: 5px;
+}
+.in-logo-highlight {
+    color: var(--primary-color);
+    margin-left: 4px;
+}
   }
