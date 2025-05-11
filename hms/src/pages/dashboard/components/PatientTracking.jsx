@@ -20,7 +20,7 @@ const PatientTracking = () => {
         const response = await api.get(
           `api/patients-main/?search=${searchTerm}`
         );
-        console.log(response.data);
+        // console.log(response.data);
         
         setPatients(response.data);
         setError("");
@@ -96,12 +96,16 @@ const PatientTracking = () => {
               <div className="pt-detail-item">
                 <span className="pt-detail-label">Date of Birth:</span>
                 <span className="pt-detail-value">
-                  {selectedPatient.day}-{selectedPatient.month}-{selectedPatient.year}
+                  {selectedPatient.day} - {selectedPatient.month} - {selectedPatient.year}
                 </span>
               </div>
               <div className="pt-detail-item full-width">
                 <span className="pt-detail-label">Address:</span>
                 <span className="pt-detail-value">{selectedPatient.address}</span>
+              </div>
+              <div className="pt-detail-item full-width">
+                <span className="pt-detail-label">Status:</span>
+                <span className="pt-detail-value">{selectedPatient.status}</span>
               </div>
             </div>
             <hr />

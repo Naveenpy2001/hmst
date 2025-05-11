@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from .models import *
 
 User = get_user_model()
+PATIENT_RATE = 20  # at the top of the file
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
 
@@ -128,7 +130,7 @@ class PatientDetailSerializer(serializers.ModelSerializer):
         model = PatientRegister
         fields = [
             'id', 'first_name', 'last_name', 'age','amount', 'phone', 'disease',
-            'gender', 'address', 'temparature', 'bp', 'appointment',
+            'gender', 'address', 'temparature', 'bp', 'appointment','date','aadhar','day','month','year','email',
             'patientType', 'paymentType', 'medical_records','lab_tests','pharmacy_records','status'
         ]
 
@@ -214,27 +216,134 @@ class SyrupSerializer(serializers.ModelSerializer):
 
 
 
-class MonthlyPaymentUpdateSerializer(serializers.ModelSerializer):
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from .models import MonthlyDoctorPayment, PatientRegister
+from django.db.models import Sum, Count, Q
+
+
+User = get_user_model()
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'is_active']
+        read_only_fields = fields
+
+class PatientRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientRegister
+        fields = ['id', 'created_at', 'charge_to_admin']
+        read_only_fields = fields
+
+class MonthlyDoctorPaymentSerializer(serializers.ModelSerializer):
+    doctor = UserBasicSerializer(read_only=True)
+    amount_due = serializers.SerializerMethodField()
+    patients_pending = serializers.SerializerMethodField()
+    amount_pending = serializers.SerializerMethodField()
+    
+
     class Meta:
         model = MonthlyDoctorPayment
-        fields = ['id', 'doctor', 'year', 'month', 'total_patients', 
-                 'patients_paid', 'patients_pending', 'amount_paid', 
-                 'amount_pending', 'paid']
-        read_only_fields = ['doctor', 'year', 'month', 'total_patients']
-
-
-# Add to serializers.py
-class DoctorPaymentSerializer(serializers.ModelSerializer):
-    doctor_email = serializers.EmailField(source='doctor.email', read_only=True)
-    doctor_name = serializers.CharField(source='doctor.username', read_only=True)
-    doctor_phone = serializers.CharField(source='doctor.phone_number', read_only=True)
-    
-    class Meta:
-        model = DoctorPayment
         fields = [
-            'id', 'doctor', 'doctor_email', 'doctor_name', 'doctor_phone',
-            'amount', 'patients_count', 'month', 'year', 'is_paid',
-            'payment_date', 'created_at'
+            'id', 'doctor', 'month', 'year',
+            'total_patients', 'patients_paid',
+            'patients_pending', 'amount_paid',
+            'amount_due', 'amount_pending',
+            'paid', 'payment_date', 'created_at',
+            'updated_at'
         ]
-        read_only_fields = ['doctor', 'amount', 'patients_count', 'month', 'year']
+        read_only_fields = [
+            'id', 'doctor', 'month', 'year',
+            'total_patients', 'patients_pending',
+            'amount_due', 'amount_pending',
+            'created_at', 'updated_at','amount_paid'
+        ]
 
+    def get_amount_due(self, obj):
+        return obj.total_patients * PATIENT_RATE  # $20 per patient
+
+    def get_patients_pending(self, obj):
+        return obj.total_patients - obj.patients_paid
+
+    def get_amount_pending(self, obj):
+        return (obj.total_patients * 20) - obj.amount_paid
+
+class MonthlyPaymentUpdateSerializer(serializers.ModelSerializer):
+    doctor_email = serializers.EmailField(source='doctor.email', read_only=True)
+    doctor_name = serializers.CharField(source='doctor.name', read_only=True)
+    doctor_address = serializers.CharField(source='doctor.address', read_only=True)
+    class Meta:
+        model = MonthlyDoctorPayment
+        fields = [
+            'id', 'doctor', 'doctor_email', 'doctor_name', 'doctor_address',
+            'month', 'year', 'total_patients', 'amount_paid', 'paid',
+            'payment_date', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'month', 'year', 'total_patients',
+            'updated_at'
+        ]
+
+    def validate(self, data):
+        # Validate that amount_paid doesn't exceed what's due
+        instance = self.instance
+        max_payment = instance.total_patients * 20
+        if 'amount_paid' in data and data['amount_paid'] > max_payment:
+            raise serializers.ValidationError(
+                f"Payment cannot exceed ${max_payment}. Amount due: ${max_payment - instance.amount_paid}"
+            )
+
+        return data
+
+class DoctorPaymentStatusSerializer(serializers.ModelSerializer):
+    month_name = serializers.SerializerMethodField()
+    amount_due = serializers.SerializerMethodField()
+    amount_pending = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MonthlyDoctorPayment
+        fields = [
+            'month', 'year', 'month_name',
+            'total_patients', 'amount_due',
+            'amount_paid', 'amount_pending',
+            'paid', 'payment_date'
+        ]
+
+    def get_month_name(self, obj):
+        return obj.get_month_display()
+
+    def get_amount_due(self, obj):
+        return obj.total_patients * 20
+
+    def get_amount_pending(self, obj):
+        return (obj.total_patients * 20) - obj.amount_paid
+
+class AdminDoctorStatsSerializer(serializers.ModelSerializer):
+    monthly_stats = serializers.SerializerMethodField()
+    total_amount_due = serializers.SerializerMethodField()
+    total_patients = serializers.SerializerMethodField()
+
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'username',
+            'last_daily_login', 'created_at',
+            'is_active', 'total_patients',
+            'total_amount_due', 'monthly_stats'
+        ]
+
+    def get_total_patients(self, obj):
+        return obj.patientregister_set.count()
+
+    def get_total_amount_due(self, obj):
+        return obj.patientregister_set.aggregate(
+            total=Sum('charge_to_admin')
+        )['total'] or 0
+
+    def get_monthly_stats(self, obj):
+        payments = MonthlyDoctorPayment.objects.filter(
+            doctor=obj
+        ).order_by('-year', '-month')
+        return MonthlyDoctorPaymentSerializer(payments, many=True).data

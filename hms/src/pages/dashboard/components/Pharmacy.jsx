@@ -12,7 +12,6 @@ const Pharmacy = () => {
   const [searchId, setSearchId] = useState("");
   const [patientDetails, setPatientDetails] = useState(null);
   const [medicalRecords, setMedicalRecords] = useState([]);
-  
   const [givenMedicines, setGivenMedicines] = useState([]);
   const [activeTab, setActiveTab] = useState(1);
   const [filterId, setFilterId] = useState("");
@@ -33,7 +32,7 @@ const Pharmacy = () => {
       setError("");
       const response = await api.get(`/api/patients-main/${searchId}/`);
       const data = response.data;
-        console.log('patient Data : ',data);
+        // console.log('patient Data : ',data);
         
       if (data) {
         setPatientDetails({
@@ -41,7 +40,8 @@ const Pharmacy = () => {
           name: `${data.first_name} ${data.last_name}`,
           phone: data.phone,
           diseases: data.disease,
-          status:data.status
+          status:data.status,
+          doctor_advice : data.doctorAdvice
         });
         
         // Initialize medical records with amounts
@@ -88,9 +88,10 @@ const Pharmacy = () => {
         const payload = {
           patient_id: patientDetails.id,
           patient: patientDetails.id,
+          doctor_advice: patientDetails.doctorAdvice,
           record_id: record.id,
-          doctor_advice: record.doctorAdvice,
-  
+          patient_name: patientDetails.name,
+          patient_disease: patientDetails.diseases,
           tablets: record.tablets?.map(tablet => ({
             name: tablet.name,
             dosage: tablet.dosage,
@@ -131,12 +132,13 @@ const Pharmacy = () => {
           date: new Date().toISOString()
         };
   
-        console.log("Sending pharmacy record:", payload);
+        // console.log("Sending pharmacy record:", payload);
   
         const response = await api.post("/api/pharmacy/", payload);
   
         if (response.status === 201 || response.status === 200) {
-          console.log("Successfully sent record:", record.id);
+          // console.log("Successfully sent record:", record.id);
+          setActiveTab(2)
         }
       }
   
@@ -149,7 +151,7 @@ const Pharmacy = () => {
   
       setGivenMedicines(prev => [...prev, givenData]);
       setError("");
-      alert("Medicines dispensed successfully!");
+      // alert("Medicines dispensed successfully!");
     } catch (error) {
       console.error("Error dispensing medicines:", error);
       setError("Failed to dispense medicines. Please try again.");
@@ -162,11 +164,14 @@ const Pharmacy = () => {
   const fetchDispensedMedicines = async () => {
     try {
       const response = await api.get('/api/pharmacy/');
+// console.log('users data : ',response.data);
 
       
       const transformedData = response.data.map(record => ({
         patientId: record.patient,
-
+        patient_name:record.patient_name,
+        patient_disease:record.patient_disease,
+        doctor_advice:record.doctor_advice,
         date: record.date,
         medicalRecords: [{
           id: record.id,
@@ -179,7 +184,7 @@ const Pharmacy = () => {
           ointmentsAmount: parseFloat(record.ointmentsAmount),
           syrupsAmount: parseFloat(record.syrupsAmount),
           total_amount: parseFloat(record.total_amount),
-          doctorAdvice: record.doctor_advice || "No advice recorded"
+          doctorAdvice: record.doctorAdvice || "No advice recorded"
         }]
       }));
       setGivenMedicines(transformedData);
@@ -195,7 +200,7 @@ const Pharmacy = () => {
   
 
   const fetchPDF = async (patientId) => {
-    console.log('pt-id : ',patientId);
+  
     
     try {
       setIsLoading(true);
@@ -299,7 +304,7 @@ const Pharmacy = () => {
               <>
                 <h3 className="ph-section-title">Prescribed Medicines</h3>
                 {
-                  patientDetails.status === 'completed' ? (
+                  patientDetails.status === 'Completed' ? (
                     <>
                     <p style={{fontWeight:'700',color:'green',textAlign:'center',fontSize:'30px'}}>Completed ✅</p>
                     </>
@@ -329,7 +334,7 @@ const Pharmacy = () => {
                   <button
                     className="ph-primary-button"
                     onClick={handleGiveMedicine}
-                    disabled={isLoading}
+                    disabled={isLoading && patientDetails?.status === 'Completed'}
                   >
                     {isLoading ? "Processing..." : "Confirm Dispensing"}
                   </button>

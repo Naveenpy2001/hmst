@@ -198,13 +198,13 @@ const MedicinesTable = ({
         </div>
       )}
 
-      {onDownload && (
+      {/* {onDownload && (
         <div className="ph-actions">
           <button className="ph-download-button" onClick={onDownload}>
             <FiDownload /> Download Bill
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

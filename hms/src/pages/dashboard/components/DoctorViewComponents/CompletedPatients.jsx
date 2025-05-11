@@ -12,7 +12,7 @@ const CompletedPatients = ({ selectedPatient, onSelectPatient }) => {
   const fetchCompletedPatients = async () => {
     try {
       const response = await api.get('/api/patients-main/completed/');
-      console.log('completed : ',response.data);
+    
       
       setCompletedPatients(response.data);
     } catch (error) {

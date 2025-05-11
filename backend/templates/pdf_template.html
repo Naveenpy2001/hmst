@@ -77,7 +77,7 @@
       }
       .patient-details strong {
         display: inline-block;
-        width: 80px;
+        width: 100px;
       }
       .col-25 {
         width: 25%;
@@ -141,7 +141,7 @@
 
     <!-- Patient Details -->
     <div class="patient-details">
-      <div><strong>Patient Name:</strong> {{ patient.full_name }}</div>
+      <div><strong>Patient Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</div>
       <div><strong>Gender:</strong> {{ patient.gender }}</div>
       <div><strong>Age:</strong> {{ patient.age }}</div>
       <div><strong>Weight:</strong> {{ patient.weight }} kg</div>

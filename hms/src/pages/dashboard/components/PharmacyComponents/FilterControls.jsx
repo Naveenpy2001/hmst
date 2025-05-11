@@ -22,15 +22,7 @@ const FilterControls = ({
           disabled={isLoading}
         />
       </div>
-      <div className="ph-filter-group">
-        <input
-          type="date"
-          className="ph-filter-input"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          disabled={isLoading}
-        />
-      </div>
+     
       <button 
         className="ph-filter-button" 
         onClick={handleFilter}

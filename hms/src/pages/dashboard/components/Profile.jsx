@@ -29,7 +29,7 @@ const Profile = () => {
 
   const doctorData = async () => {
     const res = await api.get('api/doctor-payment/')
-    console.log('doctor-payment : ',res);
+    // console.log('doctor-payment : ',res);
   }
 
   useEffect(() => {
@@ -158,7 +158,7 @@ const Profile = () => {
       });
   
       const res = await api.put(`/api/user-details/${userId}/`, formData);
-      console.log(res);
+      // console.log(res);
       setEditMode(false);
     } catch (err) {
       console.error(err);
@@ -234,7 +234,7 @@ const Profile = () => {
         <h3 className="pf-section-title">Personal Information</h3>
        
         <div className="pf-form-group">
-          <label className="pf-form-label">Last Name</label>
+          <label className="pf-form-label">User Name</label>
           <input
             type="text"
             name="username"

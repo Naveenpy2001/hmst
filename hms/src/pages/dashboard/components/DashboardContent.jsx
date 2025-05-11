@@ -22,8 +22,7 @@ import usePatientStore from "../../../store/patientsStore";
 
 const DashboardContent = () => {
   const { patients, fetchPatients, totals } = usePatientStore();
-  console.log('patients : ',patients);
-  console.log('totals : ',totals);
+  
   
   useEffect(() => {
     fetchPatients();

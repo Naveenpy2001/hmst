@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { IoMdDownload, IoMdSearch, IoMdClose } from "react-icons/io";
 import { FiUpload, FiPlus } from "react-icons/fi";
-// import FileUpload from "./fileUpload";
 import "./Lab.css";
 import api from "../../../services/api";
 
@@ -10,37 +9,16 @@ const Lab = () => {
   // State management
   const [patientId, setPatientId] = useState("");
   const [patientDetails, setPatientDetails] = useState(null);
-  const [labTests, setLabTests] = useState([
-    
-  ]);
+  const [labTests, setLabTests] = useState([]);
   const [activeTab, setActiveTab] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [availableTests, setAvailableTests] = useState([
-    { name: "Complete Blood Count (CBC)" },
-  { name: "Liver Function Test (LFT)" },
-  { name: "Kidney Function Test (KFT)" },
-  { name: "Thyroid Function Test (T3, T4, TSH)" },
-  { name: "Blood Sugar - Fasting & PP" },
-  { name: "HbA1c - Diabetes Test" },
-  { name: "Urine Routine Examination" },
-  { name: "Vitamin D3 Level" },
-  { name: "Vitamin B12 Level" },
-  { name: "Lipid Profile" },
-  { name: "Dengue NS1 Antigen" },
-  { name: "Malaria Parasite Test" },
-  { name: "Widal Test (Typhoid)" },
-  { name: "COVID-19 RT-PCR" },
-  { name: "X-Ray Chest PA View" },
-  { name: "Ultrasound Abdomen" },
-  { name: "ECG (Electrocardiogram)" },
-  { name: "Blood Urea" },
-  { name: "Serum Creatinine" },
-  { name: "Stool Routine & Occult Blood" }
-  ]);
+  const [availableTests, setAvailableTests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [testSuggestions, setTestSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [newTest, setNewTest] = useState({
     testName: "",
@@ -57,10 +35,13 @@ const Lab = () => {
     test.phone?.toString().includes(searchTerm) ||
     test.testName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+
 
   // Data fetching
   useEffect(() => {
     fetchAvailableTests();
+    fetchAllLabTests();
   }, []);
 
   useEffect(() => {
@@ -72,11 +53,27 @@ const Lab = () => {
   const fetchAvailableTests = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`/getAvailableTests`);
-      setAvailableTests(Array.isArray(response.data) ? response.data : []);
+      const response = await axios.get(`/api/lab-tests/`);
+      const uniqueTestNames = [...new Set(response.data.map(test => test.testName))];
+      setAvailableTests(uniqueTestNames.map(name => ({ name })));
     } catch (error) {
       console.error("Error fetching available tests:", error);
       setError("Failed to fetch available tests");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAllLabTests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/api/lab-tests/`);
+      
+      
+      setLabTests(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching all lab tests:", error);
+      setError("Failed to fetch lab tests");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +84,6 @@ const Lab = () => {
       setIsLoading(true);
       setError("");
       const response = await api.get(`/api/patients-main/${id}/`);
-      console.log('lab res :',response.data);
       
       if (response.data) {
         setPatientDetails(response.data);
@@ -107,7 +103,7 @@ const Lab = () => {
   const fetchLabTests = async (patientId) => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`/api/lab-tests/${patientId}/`);
+      const response = await axios.get(`/api/lab-tests/?patient_id=${patientId}`);
       setLabTests(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching lab tests:", error);
@@ -125,6 +121,27 @@ const Lab = () => {
   };
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
+
+  const handleTestNameChange = (e) => {
+    const value = e.target.value;
+    setNewTest(prev => ({ ...prev, testName: value }));
+    
+    if (value.length > 1) {
+      const filtered = availableTests.filter(test => 
+        test.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setTestSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setTestSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectTestSuggestion = (testName) => {
+    setNewTest(prev => ({ ...prev, testName }));
+    setShowSuggestions(false);
+  };
 
   const handleNewTestChange = (e) => {
     const { name, value } = e.target;
@@ -148,7 +165,6 @@ const Lab = () => {
       return;
     }
 
-
     const formData = new FormData();
     formData.append('testName', newTest.testName);
     formData.append('testDate', newTest.testDate);
@@ -158,9 +174,9 @@ const Lab = () => {
     formData.append('testType', newTest.testType);
     formData.append('patient', patientDetails.id);
     formData.append('patient_id', patientDetails.id);
+    formData.append('patient_disease', patientDetails.disease);
     formData.append('phone', patientDetails.phone);
-  
-    console.log("Submitting new test:", formData);  
+    formData.append('patientName', `${patientDetails.first_name} ${patientDetails.last_name}`);
 
     try {
       setIsLoading(true);
@@ -175,9 +191,10 @@ const Lab = () => {
         testType: ""
       });
       fetchLabTests(patientDetails.id);
+      fetchAllLabTests();
     } catch (error) {
       console.error("Error adding lab test:", error);
-      setError("Failed to add lab test");
+      // setError("Failed to add lab test");
     } finally {
       setIsLoading(false);
     }
@@ -192,20 +209,13 @@ const Lab = () => {
     await fetchPatientData(patientId);
   };
 
-  const fetchComepletedLab = async () => {
-    const res = await api.get();
+  const handleDownloadPDF = async (test) => {
     
-  }
-
-  const handleDownloadPDF = async (patientId = patientDetails?.id) => {
-    if (!patientId) {
-      setError("No patient selected");
-      return;
-    }
+    
     
     try {
       setIsLoading(true);
-      const response = await api.get(`/api/lab-tests/${patientId}/`, {
+      const response = await api.get(`/api/lab-tests/${test.id}/lab-pdf/`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -239,13 +249,14 @@ const Lab = () => {
       formData.append('patient_id', patientDetails.id);
       formData.append('patientName', `${patientDetails.first_name} ${patientDetails.last_name}`);
 
-      await api.post(`/api/lab-tests/`, formData, {
+      await api.post(`/api/lab-tests/upload/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       setSuccess("Report uploaded successfully!");
       setSelectedFile(null);
+      fetchAllLabTests();
     } catch (error) {
       console.error("Error uploading file:", error);
       setError("Failed to upload report");
@@ -261,14 +272,7 @@ const Lab = () => {
   return (
     <div className="lb-container">
       {/* Notification messages */}
-      {/* {(error || success) && (
-        <div className={`lb-notification ${error ? 'error' : 'success'}`}>
-          {error || success}
-          <button onClick={() => { setError(""); setSuccess(""); }} className="lb-notification-close">
-            <IoMdClose />
-          </button>
-        </div>
-      )} */}
+      
 
       {/* Navigation Tabs */}
       <div className="lb-navigation">
@@ -306,7 +310,6 @@ const Lab = () => {
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
                 placeholder="Enter patient ID"
-                required
               />
               <button type="submit" className="lb-fetch-button" disabled={isLoading}>
                 {isLoading ? "Fetching..." : "Fetch Patient"}
@@ -332,7 +335,7 @@ const Lab = () => {
                 </div>
                 <div>
                   <p className="lb-detail-label">Test Required</p>
-                  <p className="lb-detail-value"> {patientDetails.medical_records[0].tests || "Not specified"}</p>
+                  <p className="lb-detail-value"> {patientDetails.medical_records?.[0]?.tests || "Not specified"}</p>
                 </div>
               </div>
             </div>
@@ -343,17 +346,30 @@ const Lab = () => {
           <div className="lb-form-row">
             <div className="lb-form-group">
               <label className="lb-label">Test Name <span className="lb-required">*</span></label>
-              <select
-                className="lb-input"
-                name="testName"
-                value={newTest.testName}
-                onChange={handleNewTestChange}
-              >
-                <option value="">Select a test</option>
-                {availableTests.map(test => (
-                  <option key={test.id} value={test.name}>{test.name}</option>
-                ))}
-              </select>
+              <div className="lb-autocomplete">
+                <input
+                  type="text"
+                  className="lb-input"
+                  name="testName"
+                  value={newTest.testName}
+                  onChange={handleTestNameChange}
+                  placeholder="Start typing to see suggestions"
+                  
+                />
+                {showSuggestions && testSuggestions.length > 0 && (
+                  <div className="lb-suggestions-dropdown">
+                    {testSuggestions.map((test, index) => (
+                      <div 
+                        key={index}
+                        className="lb-suggestion-item"
+                        onClick={() => selectTestSuggestion(test.name)}
+                      >
+                        {test.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="lb-form-group">
@@ -392,7 +408,6 @@ const Lab = () => {
                 min="0"
                 step="0.01"
                 placeholder="0.00"
-                
               />
             </div>
           </div>
@@ -443,11 +458,6 @@ const Lab = () => {
             <button type="submit" className="lb-primary-button" onClick={handleSubmitNewTest} disabled={isLoading}>
               {isLoading ? "Submitting..." : "Submit Test"}
             </button>
-            {patientDetails && (
-              <button type="button" className="lb-download-button" onClick={handleDownloadPDF} disabled={isLoading}>
-                <IoMdDownload /> {isLoading ? "Preparing..." : "Download Report"}
-              </button>
-            )}
           </div>
         </form>
       )}
@@ -491,7 +501,7 @@ const Lab = () => {
                       <td className="lb-td" data-label="Test Name">{test.testName}</td>
                       <td className="lb-td" data-label="Patient">
                         <div className="lb-patient-cell">
-                          <span className="lb-patient-id">#{test.patientId}</span>
+                          <span className="lb-patient-id">#{test.patient}</span>
                           <span className="lb-patient-name">{test.patientName}</span>
                         </div>
                       </td>
@@ -505,7 +515,7 @@ const Lab = () => {
                       <td className="lb-td" data-label="Actions">
                         <button 
                           className="lb-download-button"
-                          onClick={() => handleDownloadPDF(test.patientId)}
+                          onClick={() => handleDownloadPDF(test)}
                           disabled={isLoading}
                         >
                           <IoMdDownload size={16} />
@@ -539,7 +549,7 @@ const Lab = () => {
                   value={patientId}
                   onChange={(e) => setPatientId(e.target.value)}
                   placeholder="Enter patient ID"
-                  required
+                  
                 />
                 <button 
                   type="button" 
@@ -577,7 +587,7 @@ const Lab = () => {
                     onChange={handleFileChange} 
                     className="lb-file-input"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    required
+                    
                   />
                   <span className="lb-file-button">Choose File</span>
                   <span className="lb-file-name">

@@ -61,7 +61,7 @@ const PatientTreatmentForm = ({ patientId, onCancel,onSuccess  }) => {
     }
     try {
         const res = await api.post(`/api/records/`,formData)
-        console.log('response of Data from frontend  :',res);
+   
         setDoctorAdvice(""); 
         setMessage("Success ✅");
         onSuccess();

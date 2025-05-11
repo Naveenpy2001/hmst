@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import "./Patient.css";
 import api from "../../../services/api";
 
 const PatientRegistration = () => {
+
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -12,7 +13,6 @@ const PatientRegistration = () => {
     address: "",
     gender: "",
     disease: "",
-    other_disease: "",
     temparature: "",
     day: "",
     month: "",
@@ -29,6 +29,53 @@ const PatientRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState(null);
   const [error, setError] = useState(null);
+  const [showDiseaseList, setShowDiseaseList] = useState(false);
+  const [diseaseInput, setDiseaseInput] = useState("");
+
+  // List of common diseases
+  const commonDiseases = [
+    "Fever",
+    "Common Cold",
+    "Influenza (Flu)",
+    "Bronchitis",
+    "Pneumonia",
+    "Tuberculosis",
+    "Asthma",
+    "Diabetes",
+    "Hypertension",
+    "Coronary Artery Disease",
+    "Heart Failure",
+    "Stroke",
+    "Arthritis",
+    "Osteoporosis",
+    "Migraine",
+    "Epilepsy",
+    "Alzheimer's Disease",
+    "Parkinson's Disease",
+    "Depression",
+    "Anxiety Disorders",
+    "Hepatitis",
+    "Cirrhosis",
+    "Gastritis",
+    "Peptic Ulcer",
+    "Irritable Bowel Syndrome",
+    "Appendicitis",
+    "Kidney Stones",
+    "Urinary Tract Infection",
+    "Prostate Enlargement",
+    "Anemia",
+    "Leukemia",
+    "Lymphoma",
+    "Skin Allergy",
+    "Eczema",
+    "Psoriasis",
+    "Acne",
+    "Dengue",
+    "Malaria",
+    "Typhoid",
+    "Cholera",
+    "COVID-19"
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -52,21 +99,28 @@ const PatientRegistration = () => {
     }
   };
 
+  const handleDiseaseInputChange = (e) => {
+    const value = e.target.value;
+    setDiseaseInput(value);
+    setFormData(prev => ({ ...prev, disease: value }));
+    setShowDiseaseList(value.length > 0);
+  };
+
+  const selectDisease = (disease) => {
+    setDiseaseInput(disease);
+    setFormData(prev => ({ ...prev, disease }));
+    setShowDiseaseList(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const finalFormData = {
-      ...formData,
-      disease: formData.disease === "Other" ? formData.other_disease : formData.disease,
-    };
-    
-    
     try {
       const response = await api.post(
         'api/patients/',
-        finalFormData
+        formData
       );
       
       setSuccessData({
@@ -94,7 +148,6 @@ const PatientRegistration = () => {
       address: "",
       gender: "",
       disease: "",
-      other_disease: "",
       temparature: "",
       day: "",
       month: "",
@@ -107,9 +160,22 @@ const PatientRegistration = () => {
       weight: "",
       bp: ""
     });
+    setDiseaseInput("");
     setSuccessData(null);
   };
 
+  // Filter diseases based on input
+  const filteredDiseases = commonDiseases.filter(disease =>
+    disease.toLowerCase().includes(diseaseInput.toLowerCase())
+  );
+
+  const handleBlur = () => {
+  // Use a slightly longer timeout to ensure click is registered
+  setTimeout(() => setShowDiseaseList(false), 300);
+};
+
+
+ 
   return (
     <div className="pr-container">
       <h1 className="pr-title">Patient Registration</h1>
@@ -338,37 +404,35 @@ const PatientRegistration = () => {
             <div className="pr-form-section">
               <h2 className="pr-section-title">Medical Information</h2>
               
-              <div className="pr-form-group">
+               <div className="pr-form-group">
                 <label className="pr-label">Disease</label>
-                <select
-                  name="disease"
-                  value={formData.disease}
-                  onChange={(e) =>
-                    setFormData({ ...formData, disease: e.target.value })
-                  }
-                  className="pr-select"
-                  
-                >
-                  <option value="">Select Disease</option>
-                  <option value="Fever">Fever</option>
-                  <option value="Headache">Headache</option>
-                  <option value="Cold">Cold</option>
-                  <option value="Rashes">Rashes</option>
-                  <option value="Others">Others</option>
-                </select>
-                {formData.disease === "Others" && (
+                <div className="pr-disease-input-container">
                   <input
                     type="text"
-                    value={formData.other_disease}
-                    onChange={(e) =>
-                    setFormData({ ...formData, other_disease: e.target.value })
-                      }
+                    name="disease"
+                    value={diseaseInput}
+                    onChange={handleDiseaseInputChange}
                     className="pr-input"
-                    placeholder="Specify other disease"
-                    
+                    placeholder="Type or select a disease"
+                    onFocus={() => diseaseInput.length > 0 && setShowDiseaseList(true)}
+                    onBlur={() => setTimeout(() => setShowDiseaseList(false), 200)}
                   />
-                )}
+                  {showDiseaseList && filteredDiseases.length > 0 && (
+                    <ul className="pr-disease-list">
+                      {filteredDiseases.map((disease, index) => (
+                        <li 
+                          key={index}
+                          onMouseDown={() => selectDisease(disease)}
+                          className="pr-disease-item"
+                        >
+                          {disease}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
+              
               
               <div className="pr-form-group">
                 <label className="pr-label">Weight (kg)</label>

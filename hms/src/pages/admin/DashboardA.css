@@ -11,6 +11,8 @@
   background-color: #2c3e50;
   color: white;
   padding: 20px 0;
+  position: sticky;
+  top: 0;
 }
 
 .db-logo {
@@ -884,4 +886,147 @@
 .db-status-badge.resolved {
   background: #e8f5e9;
   color: #2e7d32;
+}
+
+
+/* Payment Specific Styles */
+.db-payment-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: flex-end;
+}
+
+.db-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.db-section {
+  margin-bottom: 3rem;
+}
+
+.db-status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.db-status-badge.active,
+.db-status-badge.paid {
+  background-color: #e6f7ee;
+  color: #10b981;
+}
+
+.db-status-badge.inactive {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.db-status-badge.pending {
+  background-color: #fffbeb;
+  color: #f59e0b;
+}
+
+.db-table-col.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.db-action-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.db-action-button.primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.db-action-button:hover {
+  background: #f3f4f6;
+}
+
+.db-action-button.primary:hover {
+  background: #2563eb;
+}
+
+/* Modal Styles */
+.db-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.db-modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.db-modal h3 {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.db-modal-content {
+  margin: 1.5rem 0;
+}
+
+.db-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Alert Styles */
+.db-alert {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.db-alert.error {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+}
+
+.db-alert.success {
+  background: #ecfdf5;
+  color: #10b981;
+  border: 1px solid #a7f3d0;
+}
+
+/* Responsive Tables */
+@media (max-width: 768px) {
+  .db-table-container {
+    overflow-x: auto;
+  }
+  
+  .db-table-header,
+  .db-table-row {
+    min-width: 800px;
+  }
 }

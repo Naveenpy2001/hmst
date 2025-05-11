@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-d=37*!n)68e%p=h=70)2tvulwyj$*^a=(abyx#$*q=f@mgn)hu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['hms.tsaritservices.com', 'localhost','127.0.0.1']
 
 
 # Application definition
@@ -147,7 +147,7 @@ AUTH_USER_MODEL = 'api.User'
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True, 

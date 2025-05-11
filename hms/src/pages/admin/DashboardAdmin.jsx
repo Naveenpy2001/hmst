@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FiHome, FiInbox, FiUsers, FiSettings, FiLogOut, 
-  FiUserPlus, FiMessageSquare, FiChevronDown, FiMenu ,FiDollarSign
+  FiUserPlus, FiMessageSquare, FiChevronDown, FiMenu, FiDollarSign,
+  FiCreditCard, FiCalendar, FiRefreshCw
 } from 'react-icons/fi';
-import axios from 'axios';
 import './DashboardA.css';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom'
@@ -22,12 +22,15 @@ const DashboardAdmin = () => {
   const [newUserCount, setNewUserCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Doctor Payment States
   const [doctorStats, setDoctorStats] = useState([]);
   const [monthlyPayments, setMonthlyPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [activeYear, setActiveYear] = useState(new Date().getFullYear());
   const [activeMonth, setActiveMonth] = useState(new Date().getMonth() + 1);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [resetStatus, setResetStatus] = useState(null);
 
   const navigate = useNavigate()
 
@@ -50,7 +53,7 @@ const DashboardAdmin = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/api/admin/');
+      const response = await api.get('/api/admin/doctor-stats/');
       console.log('admin :', response.data);
       
       setUsers(response.data);
@@ -62,6 +65,37 @@ const DashboardAdmin = () => {
     }
   };
 
+
+
+ const handlePaymentUpdate = async () => {
+ 
+
+  try {
+    await api.patch(`/api/admin/monthly-payments/${selectedPayment.doctor_id}/`, {
+      amount_paid: parseFloat(paymentAmount)
+    });
+    fetchMonthlyPayments();
+    setShowPaymentModal(false);
+    setPaymentAmount('');
+  } catch (err) {
+    console.error('Error updating payment:', err);
+  }
+};
+
+
+
+  const toggleDoctorStatus = async (doctorId, currentStatus) => {
+    try {
+      await api.patch(`/api/admin/doctors/${doctorId}/status/`, {
+        is_active: !currentStatus
+      });
+      fetchDoctorStats();
+      console.log('success.!');
+      
+    } catch (err) {
+      console.error('Error toggling doctor status:', err);
+    }
+  };
  
   const fetchDashboardData = async () => {
     await Promise.all([
@@ -83,28 +117,41 @@ const DashboardAdmin = () => {
     }
   };
 
+
+  const resetMonthlyCounts = async () => {
+    try {
+      setResetStatus('loading');
+      const response = await api.post('/api/admin/reset-monthly-counts/');
+      setResetStatus(response.data);
+      fetchDoctorStats();
+      fetchMonthlyPayments();
+    } catch (err) {
+      setResetStatus(err.response?.data || { error: 'Reset failed' });
+    }
+  };
+
   const handleLogout = () => {
-    navigate('/login')
+    navigate('/login');
     localStorage.removeItem('access_token');
   };
 
 
+
+
     // Add these with your other API calls
     const fetchDoctorStats = async () => {
-      try {
-        const response = await api.get('/api/admin/');
-        console.log('res1 : ',response.data);
-        
-        setDoctorStats(response.data);
-      } catch (err) {
-        console.error('Error fetching doctor stats:', err);
-      }
-    };
+    try {
+      const response = await api.get('/api/admin/doctor-stats/');
+      setDoctorStats(response.data);
+    } catch (err) {
+      console.error('Error fetching doctor stats:', err);
+    }
+  };
   
     const fetchMonthlyPayments = async () => {
       try {
-        const response = await api.get('/api/admin/');
-        // console.log('res2 : ',response.data);
+        const response = await api.get('/api/admin/monthly-payments/');
+        console.log('res2 : ',response.data);
         
         setMonthlyPayments(response.data);
       } catch (err) {
@@ -112,25 +159,12 @@ const DashboardAdmin = () => {
       }
     };
   
-    const handlePaymentUpdate = async (paymentId) => {
-      try {
-        await api.patch(`/api/monthly-payment/${paymentId}/`, {
-          amount_paid: parseFloat(paymentAmount)
-        });
-        fetchMonthlyPayments();
-        setPaymentAmount('');
-        setSelectedPayment(null);
-      } catch (err) {
-        console.error('Error updating payment:', err);
-      }
-    };
+ 
 
     
 
   useEffect(() => {
     fetchDashboardData();
-    
-
     const interval = setInterval(fetchDashboardData, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -138,6 +172,10 @@ const DashboardAdmin = () => {
   useEffect(() => {
     if (activeMenu === 'tickets') fetchTickets();
     if (activeMenu === 'users') fetchUsers();
+    if (activeMenu === 'doctor-payments') {
+      fetchDoctorStats();
+      fetchMonthlyPayments();
+    }
   }, [activeMenu]);
 
   const handleSubmitReply = async (e) => {
@@ -357,7 +395,7 @@ const DashboardAdmin = () => {
                   {user.total_patients}
                 </span>
               </div>
-              <div className="db-table-col">₹<b>{user.amount_paid_to_admin}</b> /-</div>
+              <div className="db-table-col">₹<b>{user.total_amount_due}</b> /-</div>
             </div>
           ))}
         </div>
@@ -365,9 +403,9 @@ const DashboardAdmin = () => {
     </div>
   );
 
-  const renderDoctorPayments = () => (
+   const renderDoctorPayments = () => (
     <div className="db-content">
-      <h2 className="db-title">Doctor Payments</h2>
+      <h2 className="db-title">Doctor Payment Management</h2>
       
       <div className="db-payment-controls">
         <div className="db-form-group">
@@ -397,12 +435,30 @@ const DashboardAdmin = () => {
             ))}
           </select>
         </div>
+
+        <button 
+          className="db-action-button"
+          onClick={resetMonthlyCounts}
+          disabled={resetStatus === 'loading'}
+        >
+          <FiRefreshCw /> Reset Monthly Counts
+        </button>
       </div>
 
-      <div className="db-stats">
+      {resetStatus && (
+        <div className={`db-alert ${resetStatus.error ? 'error' : 'success'}`}>
+          {resetStatus.error || 'Monthly counts reset successfully'}
+        </div>
+      )}
+
+      <div className="db-stats-grid">
         <div className="db-stat-card">
           <h3>Total Doctors</h3>
           <p>{doctorStats.length}</p>
+        </div>
+        <div className="db-stat-card">
+          <h3>Active Doctors</h3>
+          <p>{doctorStats.filter(d => d.is_active).length}</p>
         </div>
         <div className="db-stat-card">
           <h3>Total Patients</h3>
@@ -410,103 +466,164 @@ const DashboardAdmin = () => {
         </div>
         <div className="db-stat-card">
           <h3>Total Revenue</h3>
-          <p>₹{doctorStats.reduce((sum, doc) => sum + doc.amount_paid_to_admin, 0).toFixed(2)}</p>
+          <p>₹{doctorStats.reduce((sum, doc) => sum + (doc.total_patients * 20), 0).toFixed(2)}</p>
         </div>
       </div>
 
-      <div className="db-table-container">
+      <div className="db-section">
         <h3>Doctor Statistics</h3>
-        <div className="db-table-header">
-          <div className="db-table-col">Doctor</div>
-          <div className="db-table-col">Patients</div>
-          <div className="db-table-col">Amount Due</div>
-          <div className="db-table-col">Last Login</div>
-          <div className="db-table-col">Actions</div>
-        </div>
-        
-        {doctorStats.map(doctor => (
-          <div key={doctor.doctor_email} className="db-table-row">
-            <div className="db-table-col">
-              <strong>{doctor.username}</strong> <br />
-              <small>{doctor.doctor_email}</small>
-            </div>
-            <div className="db-table-col">{doctor.total_patients}</div>
-            <div className="db-table-col">
-              ₹{(doctor.total_patients * 20).toFixed(2)}
-            </div>
-            <div className="db-table-col">
-              {new Date(doctor.created_at).toLocaleDateString()}
-            </div>
-            <div className="db-table-col">
-              <button 
-                className="db-action-button"
-                onClick={() => {
-                  const payment = monthlyPayments.find(p => 
-                    p.doctor_email === doctor.doctor_email && 
-                    p.month === activeMonth && 
-                    p.year === activeYear
-                  );
-                  setSelectedPayment(payment || {
-                    doctor_email: doctor.doctor_email,
-                    month: activeMonth,
-                    year: activeYear,
-                    patients_registered: doctor.total_patients,
-                    amount_due: doctor.total_patients * 20,
-                    paid: false
-                  });
-                }}
-              >
-                Record Payment
-              </button>
-            </div>
+        <div className="db-table-container">
+          <div className="db-table-header">
+            <div className="db-table-col">Doctor</div>
+            <div className="db-table-col">Patients</div>
+            <div className="db-table-col">Amount Due</div>
+            <div className="db-table-col">Status</div>
+            <div className="db-table-col">Actions</div>
           </div>
-        ))}
+          
+          {doctorStats.map(doctor => (
+            <div key={doctor.doctor_id} className="db-table-row">
+              <div className="db-table-col">
+                <strong>{doctor.username}</strong>
+                <small>{doctor.doctor_email}</small>
+              </div>
+              <div className="db-table-col">{doctor.total_patients}</div>
+              <div className="db-table-col">
+                ₹{(doctor.total_patients * 20).toFixed(2)}
+              </div>
+              <div className="db-table-col">
+                <span className={`db-status-badge ${doctor.is_active ? 'active' : 'inactive'}`}>
+                  {doctor.is_active ? 'Active' : 'Inactive'} 
+                </span>
+              </div>
+              <div className="db-table-col actions">
+                <button 
+                  className="db-action-button"
+                  onClick={() => toggleDoctorStatus(doctor.doctor_id, doctor.is_active)}
+                >
+                  {doctor.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+                <button 
+                  className="db-action-button primary"
+                  onClick={() => {
+                    setSelectedPayment({
+                      id: doctor.payment_id, 
+                      doctor_id: doctor.doctor_id,
+                      doctor_email: doctor.doctor_email,
+                      month: activeMonth,
+                      year: activeYear,
+                      patients_registered: doctor.total_patients,
+                      amount_due: doctor.total_patients * 20,
+                      amount_paid: 0
+                    });
+                    setShowPaymentModal(true);
+                  }}
+                >
+                  ₹ Pay
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="db-section">
+        <h3>Monthly Payment History</h3>
+        <div className="db-table-container">
+          <div className="db-table-header">
+            <div className="db-table-col">Doctor</div>
+            <div className="db-table-col">Period</div>
+            <div className="db-table-col">Patients</div>
+            <div className="db-table-col">Amount Due</div>
+            <div className="db-table-col">Amount Paid</div>
+            <div className="db-table-col">Status</div>
+          </div>
+          
+          {monthlyPayments
+            .filter(p => p.year === activeYear && p.month === activeMonth)
+            .map(payment => (
+              <div key={`${payment.doctor_email}-${payment.month}-${payment.year}`} 
+                  className="db-table-row">
+                <div className="db-table-col">{payment.doctor_email}</div>
+                <div className="db-table-col">
+                  {new Date(payment.year, payment.month - 1, 1)
+                    .toLocaleString('default', {month: 'short', year: 'numeric'})}
+                </div>
+                <div className="db-table-col">{payment.total_patients}</div>
+                <div className="db-table-col">
+                  ₹{payment.amount_due || 0}
+                </div>
+                <div className="db-table-col">
+                  ₹{payment.amount_paid}
+                </div>
+                <div className="db-table-col">
+                  <span className={`db-status-badge ${payment.paid ? 'paid' : 'pending'}`}>
+                    {payment.paid ? 'Paid' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
 
       {/* Payment Modal */}
-      {selectedPayment && (
+      {showPaymentModal && (
         <div className="db-modal-overlay">
           <div className="db-modal">
-            <h3>Record Payment for {selectedPayment.doctor_email}</h3>
+            <h3>
+              <FiCreditCard /> Record Payment
+            </h3>
             
-            <div className="db-form-group">
-              <label>Month/Year</label>
-              <p>{new Date(selectedPayment.year, selectedPayment.month - 1, 1)
-                .toLocaleString('default', {month: 'long', year: 'numeric'})}
-              </p>
+            <div className="db-modal-content">
+              <div className="db-form-group">
+                <label>Doctor</label>
+                <p>{selectedPayment.doctor_email}</p>
+              </div>
+              
+              <div className="db-form-group">
+                <label>Period</label>
+                <p>
+                  {new Date(selectedPayment.year, selectedPayment.month - 1, 1)
+                    .toLocaleString('default', {month: 'long', year: 'numeric'})}
+                </p>
+              </div>
+              
+              <div className="db-form-group">
+                <label>Patients Registered</label>
+                <p>{selectedPayment.patients_registered}</p>
+              </div>
+              
+              <div className="db-form-group">
+                <label>Total Amount Due</label>
+                <p>₹{selectedPayment.amount_due.toFixed(2)}</p>
+              </div>
+              
+              <div className="db-form-group">
+                <label>Amount Paid (₹)</label>
+                <input
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder="Enter amount paid"
+                  className="db-form-input"
+                  min="0"
+                  max={selectedPayment.amount_due}
+                  step="0.01"
+                />
+              </div>
             </div>
             
-            <div className="db-form-group">
-              <label>Total Patients</label>
-              <p>{selectedPayment.patients_registered}</p>
-            </div>
-            
-            <div className="db-form-group">
-              <label>Total Amount Due</label>
-              <p>₹{selectedPayment.amount_due.toFixed(2)}</p>
-            </div>
-            
-            <div className="db-form-group">
-              <label>Amount Paid (₹)</label>
-              <input
-                type="number"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder="Enter amount paid"
-                className="db-form-input"
-              />
-            </div>
-            
-            <div className="db-modal-buttons">
+            <div className="db-modal-actions">
               <button 
-                className="db-cancel-button"
-                onClick={() => setSelectedPayment(null)}
+                className="db-button secondary"
+                onClick={() => setShowPaymentModal(false)}
               >
                 Cancel
               </button>
               <button 
-                className="db-submit-button"
-                onClick={() => handlePaymentUpdate(selectedPayment.id)}
+                className="db-button primary"
+                onClick={handlePaymentUpdate}
+                disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
               >
                 Record Payment
               </button>
@@ -514,41 +631,9 @@ const DashboardAdmin = () => {
           </div>
         </div>
       )}
-
-      <div className="db-table-container">
-        <h3>Monthly Payment History</h3>
-        <div className="db-table-header">
-          <div className="db-table-col">Doctor</div>
-          <div className="db-table-col">Month/Year</div>
-          <div className="db-table-col">Patients</div>
-          <div className="db-table-col">Amount</div>
-          <div className="db-table-col">Status</div>
-        </div>
-        
-        {monthlyPayments
-          .filter(p => p.year === activeYear && p.month === activeMonth)
-          .map(payment => (
-            <div key={`${payment.doctor_email}-${payment.month}-${payment.year}`} 
-                 className="db-table-row">
-              <div className="db-table-col">{payment.doctor_email}</div>
-              <div className="db-table-col">
-                {new Date(payment.year, payment.month - 1, 1)
-                  .toLocaleString('default', {month: 'short', year: 'numeric'})}
-              </div>
-              <div className="db-table-col">{payment.patients_registered}</div>
-              <div className="db-table-col">
-                ₹{payment.amount_due.toFixed(2)}
-              </div>
-              <div className="db-table-col">
-                <span className={`db-status-badge ${payment.paid ? 'resolved' : 'open'}`}>
-                  {payment.paid ? 'Paid' : 'Pending'}
-                </span>
-              </div>
-            </div>
-          ))}
-      </div>
     </div>
   );
+
 
   const renderSettings = () => (
     <div className="db-content">
@@ -644,32 +729,8 @@ const DashboardAdmin = () => {
                 )}
                 {/* <FiChevronDown className={`db-nav-arrow ${activeSubMenu === 'users' ? 'rotated' : ''}`} /> */}
               </button>
-              {/* {activeMenu === 'users' && (
-                <div className="db-submenu">
-                  <button className="db-submenu-item">
-                    <FiUserPlus className="db-submenu-icon" />
-                    Add New User
-                  </button>
-                  <button className="db-submenu-item">
-                    <FiUsers className="db-submenu-icon" />
-                    User List
-                  </button>
-                </div>
-              )} */}
             </li>
-            {/* <li>
-              <button 
-                className={`db-nav-item ${activeMenu === 'settings' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveMenu('settings');
-                  setActiveSubMenu(null);
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <FiSettings className="db-nav-icon" />
-                Settings
-              </button>
-            </li> */}
+
             <li>
               <button 
                 className={`db-nav-item ${activeMenu === 'doctor-payments' ? 'active' : ''}`}

@@ -22,9 +22,10 @@ const GivenMedicinesList = ({ medicines, onDownload }) => {
       <table className="ph-given-table">
         <thead>
           <tr>
-            <th></th>
+            <th>S. No.</th>
             <th>Record ID</th>
-            <th>Patient ID</th>
+            <th>Patient Name</th>
+            <th>Patient Disease</th>
             <th>Date</th>
             <th>Total (₹)</th>
             <th>Actions</th>
@@ -40,20 +41,13 @@ const GivenMedicinesList = ({ medicines, onDownload }) => {
                   onClick={() => handleRowClick(given)}
                 >
                   <td>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRow(index);
-                      }}
-                      className="ph-expand-button"
-                    >
-                      {expandedRow === index ? <FiChevronUp /> : <FiChevronDown />}
-                    </button>
+                    {index + 1}
                   </td>
-                  <td>{mainRecord.id}</td>
                   <td>{given.patientId}</td>
+                  <td>{given.patient_name}</td>
+                  <td>{given.patient_disease}</td>
                   <td>{new Date(given.date).toLocaleDateString()}</td>
-                  <td>₹{mainRecord.total_amount.toFixed(2)}</td>
+                  <td>₹{mainRecord.total_amount != null ? Number(mainRecord.total_amount).toFixed(2) : 'N/A'}</td>
                   <td>
                     <button
                       className="ph-download-button"
@@ -99,7 +93,7 @@ const GivenMedicinesList = ({ medicines, onDownload }) => {
     if (!selectedRecord) return null;
     
     const mainRecord = selectedRecord.medicalRecords[0];
-    console.log('main records : ',mainRecord);
+    
     
     return (
       <div className="ph-details-view">

@@ -13,6 +13,8 @@ class User(AbstractUser):
     referred_by = models.CharField(max_length=255, blank=True, null=True)
     is_verified = models.BooleanField(default=False)
 
+    is_active = models.BooleanField(default=True)
+
     profile_photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,6 +24,22 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "email"  # Login with email instead of username
     REQUIRED_FIELDS = ["username"]  # Username is required but not unique
+
+    payment_verified = models.BooleanField(default=False)
+    payment_verification_date = models.DateTimeField(null=True, blank=True)
+    
+    def get_monthly_patient_count(self, month, year):
+        return self.patientregister.filter(
+            created_at__month=month,
+            created_at__year=year
+        ).count()
+    
+    def get_current_month_payment_status(self):
+        today = timezone.now()
+        return self.monthly_payments.filter(
+            month=today.month,
+            year=today.year
+        ).first()
 
     def __str__(self):
         return self.username
@@ -98,12 +116,14 @@ class MedicalRecord(models.Model):
 class LabTest(models.Model):
     patient = models.ForeignKey(PatientRegister, on_delete=models.CASCADE, related_name="lab_tests")
     testName = models.CharField(max_length=255)
+    patientName = models.CharField(max_length=225,null=True,blank=True)
+    patient_disease = models.CharField(max_length=225,null=True,blank=True)
     testDate = models.DateField()
     status = models.CharField(max_length=50, default="pending")  # pending, completed
     price = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True, null=True)
     testType = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=15)
+    phone = models.CharField(max_length=15, blank=True, null=True)
 
     def __str__(self):
         return f"{self.testName} - {self.patient}"
@@ -112,6 +132,11 @@ class LabTest(models.Model):
 
 class Pharmacy(models.Model):
     patient = models.ForeignKey(PatientRegister, on_delete=models.CASCADE, related_name="pharmacy_records")
+
+    patient_name = models.CharField(max_length=225,null=True,blank=True)
+    patient_disease = models.CharField(max_length=225,null=True,blank=True)
+    
+    doctor_advice = models.CharField(max_length=225,null=True,blank=True)
 
     tablets = models.JSONField(default=list, blank=True)  # List of tablets with details
     tabletsAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -257,8 +282,6 @@ class TicketModel(models.Model):
 
 
 
-
-
 class AvailableTest(models.Model):
     name = models.CharField(max_length=255)
 
@@ -269,45 +292,106 @@ class AvailableTest(models.Model):
 
 from django.utils import timezone
 
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+User = get_user_model()
+
+
 class MonthlyDoctorPayment(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="monthly_payments")
-    year = models.IntegerField()
-    month = models.IntegerField()
+    MONTH_CHOICES = [
+        (1, 'January'),
+        (2, 'February'),
+        (3, 'March'),
+        (4, 'April'),
+        (5, 'May'),
+        (6, 'June'),
+        (7, 'July'),
+        (8, 'August'),
+        (9, 'September'),
+        (10, 'October'),
+        (11, 'November'),
+        (12, 'December'),
+    ]
+    
+    doctor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='monthly_payments'
+    )
+    month = models.PositiveSmallIntegerField(choices=MONTH_CHOICES)
+    year = models.PositiveIntegerField()
+    
+    # Patient counts
     total_patients = models.PositiveIntegerField(default=0)
     patients_paid = models.PositiveIntegerField(default=0)
-    patients_pending = models.PositiveIntegerField(default=0)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    amount_pending = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    patients_registered = models.IntegerField(default=0)
-    paid_patient_count = models.IntegerField(default=0)
+    
+    # Financials
+    amount_paid = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00
+    )
+    
+    # Status
     paid = models.BooleanField(default=False)
+    payment_date = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('doctor', 'year', 'month')
-        ordering = ['-year', '-month']
-
-    def __str__(self):
-        return f"{self.doctor.email} - {self.month}/{self.year} - Paid: {self.paid}"
-
-
-class DoctorPayment(models.Model):
-    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    patients_count = models.PositiveIntegerField()
-    month = models.PositiveIntegerField()
-    year = models.PositiveIntegerField()
-    is_paid = models.BooleanField(default=False)
-    payment_date = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         unique_together = ('doctor', 'month', 'year')
         ordering = ['-year', '-month']
     
     def __str__(self):
-        return f"{self.doctor.email} - {self.month}/{self.year} - {'Paid' if self.is_paid else 'Unpaid'}"
+        return f"{self.doctor.email} - {self.get_month_display()} {self.year}"
+    
+    @property
+    def patients_pending(self):
+        return self.total_patients - self.patients_paid
+    
+    @property
+    def amount_due(self):
+        return self.total_patients * 20  # $20 per patient
+    
+    @property
+    def amount_pending(self):
+        return (self.total_patients * 20) - self.amount_paid
+    
+    def update_counts(self):
+        """Update patient counts from PatientRegister records"""
+        self.total_patients = PatientRegister.objects.filter(
+            user=self.doctor,
+            created_at__month=self.month,
+            created_at__year=self.year
+        ).count()
+        self.save()
+
+class DoctorPaymentStatus(models.Model):
+    """Tracks payment status changes for audit purposes"""
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE)
+    monthly_payment = models.ForeignKey(
+        MonthlyDoctorPayment,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    status_before = models.BooleanField()
+    status_after = models.BooleanField()
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='status_changes'
+    )
+    changed_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"Status change for {self.doctor.email} at {self.changed_at}"
 
 
 class Tablet(models.Model):
@@ -342,4 +426,3 @@ class LabTestInput(models.Model):
 
 
 
-# info@solutiongraphs.com

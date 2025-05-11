@@ -94,6 +94,7 @@ class ResendOTPView(APIView):
 
 
 class UserLoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -180,7 +181,7 @@ class ForgotPasswordView(APIView):
                 email_from = settings.DEFAULT_FROM_EMAIL
                 recipient_list = [user.email]
                 send_mail(subject, message, email_from, recipient_list)
-
+                print(otp)
                 return Response({"message": "OTP sent to your email."}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
@@ -312,8 +313,6 @@ class PatientViewSet(viewsets.ModelViewSet):
         return Response(serialize.data)
 
 
-    
-
 class MedicalRecordViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalRecordSerializer
     permission_classes = [IsAuthenticated]
@@ -355,7 +354,32 @@ class LabTestViewSet(viewsets.ModelViewSet):
 
         serializer.save(patient=patient)
 
+    @action(detail=True, methods=['get'], url_path='lab-pdf')
+    def generate_pdf(self, request, pk=None):
+        lab_test = self.get_object()
+        user = request.user
 
+        # Render your HTML template with lab test context
+        html_string = render_to_string('labtest_pdf_template.html', {
+            'lab_test': lab_test,
+            'user': user
+        })
+
+        # Path to wkhtmltopdf.exe (only needed on Windows, or if not in PATH)
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'  # Adjust as needed
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
+        try:
+            pdf = pdfkit.from_string(html_string, False, configuration=config)
+            response = HttpResponse(pdf, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="labtest_{lab_test.id}.pdf"'
+            return response
+        except Exception as e:
+            return Response({'error': f'PDF generation failed: {str(e)}'}, status=500)
+
+import pdfkit
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 class PharmacyViewSet(viewsets.ModelViewSet):
     serializer_class = PharmacySerializer
@@ -383,26 +407,31 @@ class PharmacyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='pharmacy-pdf')
     def generate_pdf(self, request, pk=None):
-        pharmacy = self.get_object()
+        pharmacy = get_object_or_404(Pharmacy, pk=pk)
         template_path = 'pharmacy.html'
-
+        print(pharmacy.patient)
         context = {
             'pharmacy': pharmacy,
             'user': request.user
         }
 
         html = render_to_string(template_path, context)
-        result = io.BytesIO()
-        pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), dest=result)
 
-        if not pdf.err:
-            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        # Provide path to wkhtmltopdf if needed
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
+        try:
+            pdf = pdfkit.from_string(html, False, configuration=config)
+            response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename=pharmacy_record_{pharmacy.id}.pdf'
             return response
-        return Response({'error': 'Failed to generate PDF'}, status=500)
-
+        except Exception as e:
+            return Response({'error': f'PDF generation failed: {str(e)}'}, status=500)
 
 # The action in your view to generate the PDF ----- main view for see full details of a single user
+from django.db.models import Q
+
 class PatientViewSetMain(viewsets.ModelViewSet):
     serializer_class = PatientDetailSerializer
     permission_classes = [IsAuthenticated]
@@ -428,28 +457,26 @@ class PatientViewSetMain(viewsets.ModelViewSet):
         patient = get_object_or_404(PatientRegister, pk=pk, user=request.user)
         medical_records = MedicalRecord.objects.filter(patient=patient)
 
-        # Render the template with patient details
-        template = get_template('pdf_template.html')
         context = {
             'patient': patient,
             'medical_records': medical_records,
             'user': request.user
         }
-        html_content = template.render(context)
 
-        # Generate PDF using xhtml2pdf
-        pdf_output = BytesIO()
-        pisa_status = pisa.CreatePDF(html_content, dest=pdf_output)
+        # Render the HTML from template
+        html = render_to_string('pdf_template.html', context)
 
-        # Check if the PDF generation was successful
-        if pisa_status.err:
-            return HttpResponse("Error generating PDF", status=400)
+        # Configure wkhtmltopdf (required on Windows)
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'  # Change if needed
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 
-        # Return the PDF as a response
-        pdf_output.seek(0)
-        response = HttpResponse(pdf_output, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="patient_{patient.id}_report.pdf"'
-        return response
+        try:
+            pdf = pdfkit.from_string(html, False, configuration=config)
+            response = HttpResponse(pdf, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="patient_{patient.id}_report.pdf"'
+            return response
+        except Exception as e:
+            return Response({'error': f'PDF generation failed: {str(e)}'}, status=500)
 
 
 class TicketAPIView(APIView):
@@ -519,117 +546,9 @@ class AdminDoctorPatientStatsView(APIView):
 
         return Response(result)
 
-
-class IsDoctorPaidThisMonth(BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_staff:
-            return True  # Admins can always access
-        today = timezone.now()
-        paid = MonthlyDoctorPayment.objects.filter(
-            doctor=request.user,
-            year=today.year,
-            month=today.month,
-            paid=True
-        ).exists()
-        return paid
-
-
-
-class DoctorMonthlyStatsView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def get(self, request):
-        records = MonthlyDoctorPayment.objects.all().order_by('-year', '-month')
-        data = []
-        for r in records:
-            data.append({
-                "doctor_email": r.doctor.email,
-                "month": r.month,
-                "year": r.year,
-                "patients_registered": r.paid_patient_count,
-                "amount_due": r.paid_patient_count * 20,
-                "paid": r.paid
-            })
-        return Response(data)
-
-
-
-class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
-    queryset = MonthlyDoctorPayment.objects.all()
-    serializer_class = MonthlyPaymentUpdateSerializer
-    permission_classes = [IsAdminUser]
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        payment_amount = request.data.get('amount_paid', 0)
-        
-        try:
-            payment_amount = float(payment_amount)
-        except (TypeError, ValueError):
-            return Response({"error": "Invalid payment amount"}, status=400)
-        
-        # Calculate how many patients this payment covers
-        charge_per_patient = 20.00  # Your standard charge
-        patients_covered = int(payment_amount / charge_per_patient)
-        remaining_amount = payment_amount % charge_per_patient
-        
-        # Update the record
-        instance.patients_paid += patients_covered
-        instance.patients_pending = instance.total_patients - instance.patients_paid
-        instance.amount_paid += (patients_covered * charge_per_patient)
-        instance.amount_pending = (instance.patients_pending * charge_per_patient)
-        
-        # Mark as fully paid if no pending patients
-        if instance.patients_pending == 0:
-            instance.paid = True
-        
-        instance.save()
-        
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-
-
-
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-class DoctorPaymentStatusView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        today = timezone.now()
-        payments = MonthlyDoctorPayment.objects.filter(
-            doctor=request.user
-        ).order_by('-year', '-month')
-        
-        data = []
-        for payment in payments:
-            data.append({
-                "month": payment.month,
-                "year": payment.year,
-                "total_patients": payment.total_patients,
-                "patients_paid": payment.patients_paid,
-                "patients_pending": payment.patients_pending,
-                "amount_paid": float(payment.amount_paid),
-                "amount_pending": float(payment.amount_pending),
-                "paid": payment.paid,
-                "updated_at": payment.updated_at
-            })
-        
-        return Response(data)
-
-
-
-
-
 import csv
 import os
 import pandas as pd
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
@@ -729,187 +648,306 @@ class FileUploadViewSet(viewsets.ViewSet):
 
 
 
+# admin
 
-
-# Add to views.py
-from django.db.models import Q
-from datetime import datetime
-
-class AdminDoctorListView(APIView):
-    permission_classes = [IsAdminUser]
-    
-    def get(self, request):
-        current_month = datetime.now().month
-        current_year = datetime.now().year
-        
-        # Optimized single query with annotations
-        doctors = User.objects.filter(
-            Q(patientregister__isnull=False) & 
-            Q(is_staff=False)
-        ).annotate(
-            total_patients=Count('patientregister'),
-            current_month_patients=Count(
-                'patientregister',
-                filter=Q(
-                    patientregister__created_at__month=current_month,
-                    patientregister__created_at__year=current_year
-                )
-            ),
-            amount_due=Sum('patientregister__charge_to_admin')
-        ).values(
-            'id', 'username', 'email', 'phone_number',
-            'total_patients', 'current_month_patients', 'amount_due'
-        ).distinct()
-        
-        return Response(list(doctors))
-
-class AdminPaymentManagementView(APIView):
-    permission_classes = [IsAdminUser]
-    
-    def get(self, request):
-        # Get all unpaid payments with doctor details in a single query
-        payments = DoctorPayment.objects.filter(
-            is_paid=False
-        ).select_related('doctor').order_by('year', 'month')
-        
-        serializer = DoctorPaymentSerializer(payments, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        doctor_id = request.data.get('doctor_id')
-        month = request.data.get('month')
-        year = request.data.get('year')
-        
-        try:
-            payment = DoctorPayment.objects.get(
-                doctor_id=doctor_id,
-                month=month,
-                year=year
-            )
-            payment.is_paid = True
-            payment.payment_date = timezone.now().date()
-            payment.save()
-            
-            # Update MonthlyDoctorPayment record if exists
-            MonthlyDoctorPayment.objects.filter(
-                doctor_id=doctor_id,
-                month=month,
-                year=year
-            ).update(paid=True)
-            
-            return Response({'status': 'Payment marked as paid'})
-        except DoctorPayment.DoesNotExist:
-            return Response(
-                {'error': 'Payment record not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-class MonthlyPaymentReportView(APIView):
-    permission_classes = [IsAdminUser]
-    
-    def get(self, request):
-        # Efficient grouped query
-        reports = (
-            DoctorPayment.objects
-            .values('year', 'month')
-            .annotate(
-                total_doctors=Count('doctor', distinct=True),
-                total_patients=Sum('patients_count'),
-                total_amount=Sum('amount'),
-                paid_amount=Sum('amount', filter=Q(is_paid=True)),
-                unpaid_amount=Sum('amount', filter=Q(is_paid=False))
-            )
-            .order_by('-year', '-month')
-        )
-        
-        return Response(list(reports))
-    
-
-
-# views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework import viewsets
 from django.utils import timezone
 from datetime import datetime
 from django.db.models import Sum, Count, Q
+from .models import User, PatientRegister, MonthlyDoctorPayment
+from .serializers import MonthlyPaymentUpdateSerializer
+from .permissions import IsDoctorPaidThisMonth
 
-class DoctorPaymentStatusAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    
+class AdminDoctorPatientStatsView(APIView):
+    permission_classes = [IsAdminUser] 
+
     def get(self, request):
-        current_date = timezone.now()
-        current_month = current_date.month
-        current_year = current_date.year
-        
-        # Get the doctor's payment status for the current month
+        # Get all doctors with their patient counts and amounts due
+        doctors = (
+            User.objects
+            .filter(patientregister__isnull=False)
+            .annotate(
+                total_patients=Count('patientregister'),
+                amount_paid_to_admin=Sum('patientregister__charge_to_admin')
+            )
+            .values('id', 'email', 'total_patients', 'amount_paid_to_admin','username','last_daily_login','created_at','is_active')
+        )
+
+        # Get monthly stats for each doctor
+        monthly_stats = {}
+        for payment in MonthlyDoctorPayment.objects.all():
+            key = f"{payment.doctor_id}_{payment.year}_{payment.month}"
+            monthly_stats[key] = {
+                'patients_count': payment.total_patients,
+                'amount_due': payment.total_patients * 20,
+                'paid': payment.paid
+            }
+
+        # Format response
+        result = []
+        for entry in doctors:
+            doctor_id = entry['id']
+            # Get all months with data for this doctor
+            doctor_months = MonthlyDoctorPayment.objects.filter(
+                doctor_id=doctor_id
+            ).order_by('-year', '-month')
+            
+            monthly_data = []
+            for month_data in doctor_months:
+                monthly_data.append({
+                    'month': month_data.month,
+                    'year': month_data.year,
+                    'patients_count': month_data.total_patients,
+                    'amount_due': month_data.total_patients * 20,
+                    'paid': month_data.paid,
+                    'payment_date': month_data.payment_date
+                })
+
+            result.append({
+                "doctor_id": doctor_id,
+                "doctor_email": entry['email'],
+                "total_patients": entry['total_patients'],
+                "total_amount_due": float(entry['amount_paid_to_admin'] or 0),
+                'username': entry['username'],
+                'last_daily_login': entry['last_daily_login'],
+                'created_at': entry['created_at'],
+                'is_active': entry.get('is_active', False),  # Add this field to track account status
+                'monthly_stats': monthly_data
+            })
+
+        return Response(result)
+
+
+class ToggleDoctorStatusView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, pk):
         try:
-            payment_status = DoctorPayment.objects.get(
+            doctor = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Doctor not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        doctor.is_active = not doctor.is_active
+        doctor.save()
+        return Response(
+            {"message": f"Doctor {'activated' if doctor.is_active else 'deactivated'}"},
+            status=status.HTTP_200_OK
+        )
+
+class DoctorMonthlyStatsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        # Get all monthly records grouped by doctor
+        doctors = User.objects.filter(patientregister__isnull=False).distinct()
+        response_data = []
+        
+        for doctor in doctors:
+            records = MonthlyDoctorPayment.objects.filter(
+                doctor=doctor
+            ).order_by('-year', '-month')
+            
+            doctor_data = {
+                'doctor_id': doctor.id,
+                'doctor_email': doctor.email,
+                'monthly_stats': []
+            }
+            
+            for r in records:
+                doctor_data['monthly_stats'].append({
+                    "month": r.month,
+                    "year": r.year,
+                    "patients_registered": r.total_patients,
+                    "amount_due": r.total_patients * 20,
+                    "amount_paid": r.amount_paid,
+                    "paid": r.paid,
+                    "payment_date": r.payment_date,
+                    "is_active": r.doctor.is_active  # Account status
+                })
+            
+            response_data.append(doctor_data)
+        
+        return Response(response_data)
+
+from decimal import Decimal
+
+class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyDoctorPayment.objects.all()
+    serializer_class = MonthlyPaymentUpdateSerializer
+    permission_classes = [IsAdminUser]
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Handle payment update
+        if 'amount_paid' in request.data:
+            try:
+                new_payment = Decimal(str(request.data.get('amount_paid')))
+            except (TypeError, ValueError):
+                return Response({"error": "Invalid amount format"}, status=400)
+
+            total_due = Decimal(instance.total_patients * 20)
+            updated_total_paid = instance.amount_paid + new_payment
+
+            if updated_total_paid > total_due:
+                return Response(
+                    {"error": "Overpayment not allowed", "max_allowed": str(total_due - instance.amount_paid)},
+                    status=400
+                )
+
+            instance.amount_paid = updated_total_paid
+            instance.paid = instance.amount_paid >= total_due
+
+            if instance.paid:
+                instance.payment_date = timezone.now()
+                instance.doctor.is_active = True
+                instance.doctor.save()
+
+            instance.save()
+
+        # Handle doctor active status toggle if provided
+        if 'is_active' in request.data:
+            instance.doctor.is_active = request.data.get('is_active')
+            instance.doctor.save()
+
+        serializer = self.get_serializer(instance)
+
+        # Custom response: amount pending and unpaid patients
+        amount_due = Decimal(instance.total_patients * 20)
+        amount_pending = amount_due - instance.amount_paid
+        per_patient_cost = Decimal("20")
+        unpaid_patients = int(amount_pending / per_patient_cost) if per_patient_cost > 0 else 0
+
+        return Response({
+            "payment": serializer.data,
+            "amount_due": float(amount_due),
+            "amount_paid": float(instance.amount_paid),
+            "amount_pending": float(amount_pending),
+            "unpaid_patients": unpaid_patients
+        })
+
+
+class DoctorPaymentStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.now()
+        current_month = today.month
+        current_year = today.year
+        
+        # Get current month's data
+        try:
+            current_payment = MonthlyDoctorPayment.objects.get(
                 doctor=request.user,
                 month=current_month,
                 year=current_year
             )
-            is_paid = payment_status.is_paid
-            amount_due = payment_status.amount
-            patients_count = payment_status.patients_count
-        except DoctorPayment.DoesNotExist:
-            # Calculate if no payment record exists yet
-            patients_data = PatientRegister.objects.filter(
+        except MonthlyDoctorPayment.DoesNotExist:
+            # Create new record if doesn't exist
+            patient_count = PatientRegister.objects.filter(
                 user=request.user,
                 created_at__month=current_month,
                 created_at__year=current_year
-            ).aggregate(
-                patients_count=Count('id'),
-                amount_due=Sum('charge_to_admin')
-            )
+            ).count()
             
-            is_paid = False
-            patients_count = patients_data['patients_count'] or 0
-            amount_due = float(patients_data['amount_due'] or 0.00)
+            current_payment = MonthlyDoctorPayment.objects.create(
+                doctor=request.user,
+                month=current_month,
+                year=current_year,
+                total_patients=patient_count,
+                amount_paid=0,
+                paid=False
+            )
         
-        # Get historical payment data (last 6 months)
-        last_six_months = (
-            DoctorPayment.objects
-            .filter(doctor=request.user)
-            .order_by('-year', '-month')
-            .values('month', 'year', 'amount', 'is_paid', 'payment_date')[:6]
-        )
+        # Get historical data
+        payments = MonthlyDoctorPayment.objects.filter(
+            doctor=request.user
+        ).exclude(
+            month=current_month,
+            year=current_year
+        ).order_by('-year', '-month')
         
-        # Calculate totals for dashboard
-        totals = PatientRegister.objects.filter(
-            user=request.user
-        ).aggregate(
-            all_time_patients=Count('id'),
-            all_time_payments=Sum('charge_to_admin'),
-            unpaid_patients=Count('id', filter=Q(
-                created_at__month=current_month,
-                created_at__year=current_year,
-                monthlydoctorpayment__paid=False
-            )),
-            paid_patients=Count('id', filter=Q(
-                monthlydoctorpayment__paid=True
-            ))
-        )
-        
-        response_data = {
+        # Prepare response
+        data = {
             'current_month': {
-                'month': current_month,
-                'year': current_year,
-                'patients_count': patients_count,
-                'amount_due': amount_due,
-                'is_paid': is_paid,
-                'charge_per_patient': 20.00,  # This could be dynamic if needed
-                'payment_deadline': datetime(current_year, current_month, 10).strftime('%Y-%m-%d'),  # 10th of each month
+                "month": current_payment.month,
+                "year": current_payment.year,
+                "total_patients": current_payment.total_patients,
+                "amount_due": current_payment.total_patients * 20,
+                "amount_paid": float(current_payment.amount_paid),
+                "amount_pending": (current_payment.total_patients * 20) - current_payment.amount_paid,
+                "paid": current_payment.paid,
+                "updated_at": current_payment.updated_at,
+                "account_active": request.user.is_active
             },
-            'payment_history': list(last_six_months),
-            'totals': {
-                'all_time_patients': totals['all_time_patients'] or 0,
-                'all_time_payments': float(totals['all_time_payments'] or 0.00),
-                'unpaid_patients': totals['unpaid_patients'] or 0,
-                'paid_patients': totals['paid_patients'] or 0,
-            },
-            'payment_instructions': "Please make payment to admin to continue full access",
+            'history': []
         }
         
-        return Response(response_data, status=status.HTTP_200_OK)
+        for payment in payments:
+            data['history'].append({
+                "month": payment.month,
+                "year": payment.year,
+                "total_patients": payment.total_patients,
+                "amount_due": payment.total_patients * 20,
+                "amount_paid": float(payment.amount_paid),
+                "paid": payment.paid,
+                "payment_date": payment.payment_date,
+                "updated_at": payment.updated_at
+            })
+        
+        return Response(data)
+
+
+class MonthlyDoctorPaymentReset(APIView):
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        """
+        Admin endpoint to reset monthly counts on 1st of each month
+        """
+        today = timezone.now()
+        if today.day != 1:
+            return Response(
+                {"error": "This can only be run on the 1st of the month"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get previous month
+        prev_month = today.month - 1 if today.month > 1 else 12
+        prev_year = today.year if today.month > 1 else today.year - 1
+        
+        # Create new records for current month for all doctors
+        doctors = User.objects.filter(patientregister__isnull=False).distinct()
+        created_count = 0
+        
+        for doctor in doctors:
+            # Check if record already exists
+            if not MonthlyDoctorPayment.objects.filter(
+                doctor=doctor,
+                month=today.month,
+                year=today.year
+            ).exists():
+                # Create new record with 0 patients
+                MonthlyDoctorPayment.objects.create(
+                    doctor=doctor,
+                    month=today.month,
+                    year=today.year,
+                    total_patients=0,
+                    amount_paid=0,
+                    paid=False
+                )
+                created_count += 1
+        
+        return Response({
+            "message": f"Created {created_count} new monthly records",
+            "month": today.month,
+            "year": today.year
+        })
+

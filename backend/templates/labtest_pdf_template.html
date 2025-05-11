@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 40px;
+        }
+        body {
+            font-family: "Helvetica Neue", sans-serif;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            padding: 10px 30px;
+        }
+
+        .hospital-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .hospital-header h1 {
+            font-size: 30px;
+            color: #0e4b8c;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #0e4b8c;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .doctor-info {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 16px;
+            color: #444;
+        }
+        .doctor-info p {
+            margin: 4px 0;
+        }
+
+        .section-title {
+            font-size: 22px;
+            color: #0e4b8c;
+            margin: 30px 0 10px 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .info-table td {
+            padding: 10px;
+            font-size: 17px;
+            vertical-align: top;
+        }
+
+        .info-table .label {
+            font-weight: bold;
+            width: 180px;
+            color: #0e4b8c;
+        }
+
+        .notes-box {
+            margin-top: 30px;
+            background-color: #f3faff;
+            border-left: 5px solid #0e4b8c;
+            padding: 20px;
+        }
+
+        .notes-box strong {
+            font-size: 18px;
+        }
+
+        .total-amount {
+            margin-top: 40px;
+            text-align: right;
+            font-size: 20px;
+            font-weight: bold;
+            color: #0e4b8c;
+            border-top: 2px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hospital-header">
+            <h1>{{ user.hospital_name }}</h1>
+        </div>
+
+        <div class="doctor-info">
+            <p><strong>Doctor:</strong> {{ user.username }}</p>
+            <p><strong>Phone:</strong> {{ user.phone_number }}</p>
+            <p><strong>Address:</strong> {{ user.address }}</p>
+        </div>
+
+        <div class="section-title">Lab Test Information</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Test Name:</td>
+                <td>{{ lab_test.testName }}</td>
+            </tr>
+            <tr>
+                <td class="label">Test Type:</td>
+                <td>{{ lab_test.testType }}</td>
+            </tr>
+            <tr>
+                <td class="label">Patient Name:</td>
+                <td>{{ lab_test.patientName }}</td>
+            </tr>
+            <tr>
+                <td class="label">Disease:</td>
+                <td>{{ lab_test.patient_disease }}</td>
+            </tr>
+            <tr>
+                <td class="label">Test Date:</td>
+                <td>{{ lab_test.testDate }}</td>
+            </tr>
+            <tr>
+                <td class="label">Status:</td>
+                <td>{{ lab_test.status }}</td>
+            </tr>
+        </table>
+
+        <div class="notes-box">
+            <strong>Notes:</strong><br>
+            {{ lab_test.notes }}
+        </div>
+
+        <div class="total-amount">
+            Total Amount: ₹{{ lab_test.price }}
+        </div>
+    </div>
+</body>
+</html>

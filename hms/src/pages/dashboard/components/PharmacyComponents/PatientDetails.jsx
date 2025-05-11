@@ -20,7 +20,7 @@ const PatientDetails = ({ patient }) => {
           <p className="ph-detail-value">{patient.diseases || "Not specified"}</p>
         </div>
         <div>
-          <p className="ph-detail-label">Phone</p>
+          <p className="ph-detail-label">Status</p>
           <p className="ph-detail-value">{patient.status}</p>
         </div>
       </div>

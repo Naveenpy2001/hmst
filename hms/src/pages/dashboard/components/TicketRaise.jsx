@@ -35,7 +35,7 @@ const TicketRaise = () => {
     try {
       setIsLoadingTickets(true);
       const response = await api.get('/api/tickets/');
-      console.log("tickets data :",response.data);
+      // console.log("tickets data :",response.data);
       
       setTickets(response.data || 0);
     } catch (err) {
