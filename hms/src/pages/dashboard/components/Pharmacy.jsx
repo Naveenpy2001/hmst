@@ -69,6 +69,8 @@ const Pharmacy = () => {
     }
   };
 
+  
+
   const handleGiveMedicine = async () => {
     if (!patientDetails) {
       setError("No patient selected");
@@ -138,7 +140,10 @@ const Pharmacy = () => {
   
         if (response.status === 201 || response.status === 200) {
           // console.log("Successfully sent record:", record.id);
-          setActiveTab(2)
+          fetchDispensedMedicines();
+          setInterval(() => {
+            setActiveTab(2)
+          }, 300);
         }
       }
   

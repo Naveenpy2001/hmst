@@ -30,21 +30,72 @@ User = get_user_model()
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
+    
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             otp = random.randint(100000, 999999)
             OTP.objects.create(user=user, otp=otp)
-            subject = "Your OTP for Verification"
-            message = f"Hello {user.email},\n\nYour OTP for verification is: {otp}\n\nThank you!"
-            email_from = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [user.email]
-            send_mail(subject, message, email_from, recipient_list)
-            # Send OTP via email (implement your email logic here)
-            print(f"OTP for {user.email}: {otp}")
+            
+            # HTML email content with inline CSS
+            subject = "Verify Your Account - OTP Code"
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>OTP Verification</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #4a6fa5; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+                    <h1 style="margin: 0;">Account Verification</h1>
+                </div>
+                
+                <div style="padding: 20px; background-color: #f9f9f9; border-radius: 0 0 5px 5px; border: 1px solid #ddd;">
+                    <p>Hello {user.email},</p>
+                    <p>Thank you for registering. Please use the following OTP to verify your account:</p>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span style="display: inline-block; padding: 10px 20px; background-color: #4a6fa5; color: white; font-size: 24px; font-weight: bold; border-radius: 5px;">
+                            {otp}
+                        </span>
+                    </div>
+                    
+                    <p>This OTP is valid for 10 minutes. If you didn't request this, please ignore this email.</p>
+                    
+                    <p style="margin-top: 30px; font-size: 12px; color: #777;">
+                        © TSAR-IT Pvt Ltd · {settings.DEFAULT_FROM_EMAIL}
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Plain text version for email clients that don't support HTML
+            plain_message = f"""
+            Hello {user.email},
+            
+            Thank you for registering. Please use the following OTP to verify your account:
+            
+            OTP: {otp}
+            
+            This OTP is valid for 10 minutes. If you didn't request this, please ignore this email.
+            
+            © TSAR-IT Pvt Ltd · {settings.DEFAULT_FROM_EMAIL}
+            """
+            
+            send_mail(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                html_message=html_content,
+                fail_silently=False
+            )
+            
             return Response(
-                {"message": "User registered successfully. Please verify OTP."},
+                {"message": "User registered successfully. Please check your email for OTP."},
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -72,26 +123,93 @@ class VerifyOTPView(APIView):
 
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get("email")
+        
         try:
             user = User.objects.get(email=email)
+            
+            # Delete any existing OTPs for this user
+            OTP.objects.filter(user=user).delete()
+            
+            # Generate new OTP
             otp = random.randint(100000, 999999)
             OTP.objects.create(user=user, otp=otp)
-            subject = "Your New OTP for Verification"
-            message = f"Hello {user.email},\n\nYour new OTP for verification is: {otp}\n\nThank you!"
-            email_from = settings.DEFAULT_FROM_EMAIL
-            recipient_list = [user.email]
-            send_mail(subject, message, email_from, recipient_list)
-            print(f"OTP for {user.email}: {otp}")
-            return Response(
-                {"message": "OTP has been resent."}, status=status.HTTP_200_OK
+            print(otp)
+            # HTML email template with inline CSS
+            subject = "Your New Verification Code"
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>New OTP Verification</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #4a6fa5; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+                    <h1 style="margin: 0;">New Verification Code</h1>
+                </div>
+                
+                <div style="padding: 20px; background-color: #f9f9f9; border-radius: 0 0 5px 5px; border: 1px solid #ddd;">
+                    <p>Hello {user.email},</p>
+                    <p>As requested, here is your new verification code:</p>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span style="display: inline-block; padding: 10px 20px; background-color: #4a6fa5; color: white; font-size: 24px; font-weight: bold; border-radius: 5px;">
+                            {otp}
+                        </span>
+                    </div>
+                    
+                    <p>This code will expire in 10 minutes. If you didn't request this, please secure your account.</p>
+                    
+                    <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #777;">
+                        <p>© TSAR-IT Pvt Ltd</p>
+                        <p>Need help? Contact us at {settings.DEFAULT_FROM_EMAIL}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Plain text fallback
+            plain_message = f"""
+            Hello {user.email},
+            
+            As requested, here is your new verification code:
+            
+            OTP: {otp}
+            
+            This code will expire in 10 minutes. If you didn't request this, please secure your account.
+            
+            © TSAR-IT Pvt Ltd
+            Support: {settings.DEFAULT_FROM_EMAIL}
+            """
+            
+            # Send email
+            send_mail(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                html_message=html_content,
+                fail_silently=False
             )
+            
+            return Response(
+                {
+                    "message": "New OTP has been sent to your email.",
+                    "status": "otp_resent",
+                    "email": user.email
+                },
+                status=status.HTTP_200_OK
+            )
+            
         except User.DoesNotExist:
             return Response(
-                {"error": "User not found."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "No account found with this email address."},
+                status=status.HTTP_404_NOT_FOUND
             )
-
 
 class UserLoginView(APIView):
     permission_classes = [AllowAny]
@@ -165,28 +283,106 @@ class LogoutView(APIView):
 
         
 class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data["email"]
-
-            try:
-                user = User.objects.get(email=email)
-                otp = random.randint(100000, 999999)
-                OTP.objects.create(user=user, otp=otp)
-
-                # Send OTP via email
-                subject = "Password Reset OTP"
-                message = f"Hello {user.email},\n\nYour OTP for password reset is: {otp}. It is valid for 5 minutes.\n\nThank you!"
-                email_from = settings.DEFAULT_FROM_EMAIL
-                recipient_list = [user.email]
-                send_mail(subject, message, email_from, recipient_list)
-                print(otp)
-                return Response({"message": "OTP sent to your email."}, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        email = serializer.validated_data["email"]
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Delete any existing OTPs for password reset
+            OTP.objects.filter(user=user, purpose="password_reset").delete()
+            
+            # Generate new OTP
+            otp = random.randint(100000, 999999)
+            OTP.objects.create(user=user, otp=otp, purpose="password_reset")
+            
+            # HTML email template with inline CSS
+            subject = "Password Reset Verification Code"
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Password Reset</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #d9534f; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+                    <h1 style="margin: 0;">Password Reset Request</h1>
+                </div>
+                
+                <div style="padding: 20px; background-color: #f9f9f9; border-radius: 0 0 5px 5px; border: 1px solid #ddd;">
+                    <p>Hello {user.email},</p>
+                    <p>We received a request to reset your password. Here's your verification code:</p>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span style="display: inline-block; padding: 10px 20px; background-color: #d9534f; color: white; font-size: 24px; font-weight: bold; border-radius: 5px;">
+                            {otp}
+                        </span>
+                    </div>
+                    
+                    <p style="color: #d9534f; font-weight: bold;">This code will expire in 5 minutes.</p>
+                    <p>If you didn't request a password reset, please ignore this email or contact support immediately.</p>
+                    
+                    <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #777;">
+                        <p>For security reasons, we don't store your password. You can only reset it using this verification code.</p>
+                        <p>© TSAR-IT Pvt Ltd | <a href="mailto:{settings.SUPPORT_EMAIL}" style="color: #d9534f;">Need help?</a></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Plain text fallback
+            plain_message = f"""
+            Password Reset Request
+            
+            Hello {user.email},
+            
+            We received a request to reset your password. Here's your verification code:
+            
+            OTP: {otp}
+            
+            This code will expire in 5 minutes.
+            
+            If you didn't request a password reset, please ignore this email or contact support immediately.
+            
+            For security reasons, we don't store your password. You can only reset it using this verification code.
+            
+            © TSAR-IT Pvt Ltd
+            Support: {settings.DEFAULT_FROM_EMAIL}
+            """
+            
+            # Send email
+            send_mail(
+                subject,
+                plain_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                html_message=html_content,
+                fail_silently=False
+            )
+            
+            return Response(
+                {
+                    "message": "Password reset OTP sent to your email.",
+                    "status": "otp_sent",
+                    "email": user.email
+                },
+                status=status.HTTP_200_OK
+            )
+            
+        except User.DoesNotExist:
+            # Don't reveal whether email exists for security
+            return Response(
+                {"message": "If this email exists in our system, you'll receive a password reset OTP."},
+                status=status.HTTP_200_OK
+            )
 
 
 class ResetPasswordView(APIView):
@@ -778,13 +974,21 @@ class DoctorMonthlyStatsView(APIView):
 
 from decimal import Decimal
 
+from rest_framework.exceptions import NotFound
+
 class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
     queryset = MonthlyDoctorPayment.objects.all()
     serializer_class = MonthlyPaymentUpdateSerializer
     permission_classes = [IsAdminUser]
 
     def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
+        try:
+            instance = self.get_object()
+        except NotFound:
+            return Response(
+                {"error": "MonthlyDoctorPayment with this ID does not exist."},
+                status=404
+            )
 
         # Handle payment update
         if 'amount_paid' in request.data:
@@ -819,7 +1023,6 @@ class AdminMonthlyPaymentViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(instance)
 
-        # Custom response: amount pending and unpaid patients
         amount_due = Decimal(instance.total_patients * 20)
         amount_pending = amount_due - instance.amount_paid
         per_patient_cost = Decimal("20")

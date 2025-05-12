@@ -156,7 +156,7 @@ const RegisterForm = () => {
 
   const handleResendOTP = async () => {
     try {
-      await axios.post('/api/resend-otp/', {
+      await api.post('/api/resend-otp/', {
         email: formData.email
       });
       setResendTimer(60);

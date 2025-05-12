@@ -68,12 +68,11 @@ const DashboardAdmin = () => {
 
 
  const handlePaymentUpdate = async () => {
- 
-
   try {
     await api.patch(`/api/admin/monthly-payments/${selectedPayment.doctor_id}/`, {
-      amount_paid: parseFloat(paymentAmount)
-    });
+  amount_paid: parseFloat(paymentAmount)
+});
+
     fetchMonthlyPayments();
     setShowPaymentModal(false);
     setPaymentAmount('');
