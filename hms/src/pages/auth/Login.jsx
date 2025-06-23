@@ -90,11 +90,14 @@ const LoginForm = () => {
   
     try {
       const response = await api.post('/api/login/', formData);
+
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("refresh_token")
       
+      const {  is_staff, email } = response.data;
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("refresh_token", response.data.refresh);
       
-      const {  is_staff, email } = response.data;
 
       if (is_staff) {
         navigate('/admin/dashboard');
